@@ -1,0 +1,13 @@
+{
+    "name": "drupal/blaetter_export_epub",
+    "type": "drupal-module",
+    "description": "Exports an Issue of the Blätter and puts it into epub or mobi files.",
+    "keywords": ["Drupal"],
+    "license": "GPL-2.0+",
+    "version": "1.x-dev",
+    "minimum-stability": "dev",
+    "require": {
+        "grandt/phpepub": ">=4.0.3",
+        "php": ">=7.0"
+    }
+}

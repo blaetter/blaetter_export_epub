@@ -1,0 +1,778 @@
+@font-face {
+        font-family:"Candida Std";
+        font-style:normal;
+        font-weight:bold;
+        src : url("./font/CandidaStd-Bold.otf");
+    }
+@font-face {
+    font-family:"Candida Std";
+    font-style:italic;
+    font-weight:normal;
+    src : url("./font/CandidaStd-Italic.otf");
+}
+@font-face {
+    font-family:"Candida Std";
+    font-style:oblique;
+    font-weight:normal;
+    src : url("./font/CandidaStd-Italic.otf");
+}
+@font-face {
+    font-family:"Candida Std";
+    font-style:normal;
+    font-weight:normal;
+    src : url("./font/CandidaStd-Roman.otf");
+}
+@font-face {
+    font-family:"Frutiger LT Std 45 Light";
+    font-style:normal;
+    font-weight:bold;
+    src : url("./font/FrutigerLTStd-Bold.otf");
+}
+@font-face {
+    font-family:"Frutiger LT Std 45 Light";
+    font-style:normal;
+    font-weight:300;
+    src : url("./font/FrutigerLTStd-Light.otf");
+}
+@font-face {
+    font-family:"Frutiger LT Std 47 Light Cn";
+    font-style:normal;
+    font-weight:300;
+    font-stretch:condensed;
+    src : url("./font/FrutigerLTStd-LightCn.otf");
+}
+body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, p, pre, code, blockquote {
+    margin:0;
+    padding:0;
+    border-width:0;
+}
+td, th {
+    border-style:solid;
+    border-width:1px;
+}
+table {
+    border-collapse:collapse;
+}
+li {
+    display:block;
+}
+body {
+    -epub-hyphens:auto;
+    -webkit-hyphens:auto;
+}
+@page {
+    margin : 10px 10px 10px 10px;
+}
+p.Ebook-ZU {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.833em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:bold;
+    line-height:1.25;
+    margin-bottom:6px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:25px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Fliesstext {
+    -epub-hyphens:none;
+    -webkit-hyphens:none;
+    color:#000000;
+    font-family:"Candida Std", serif;
+    font-size:0.833em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    line-height:1.25;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:10px;
+    clear:both;
+}
+#ftn1 p.Ebook-Fliesstext,
+#ftn2 p.Ebook-Fliesstext,
+#ftn3 p.Ebook-Fliesstext,
+#ftn4 p.Ebook-Fliesstext,
+#ftn5 p.Ebook-Fliesstext,
+#ftn6 p.Ebook-Fliesstext,
+#ftn7 p.Ebook-Fliesstext,
+#ftn8 p.Ebook-Fliesstext,
+#ftn9 p.Ebook-Fliesstext,
+#ftn10 p.Ebook-Fliesstext,
+#ftn11 p.Ebook-Fliesstext,
+#ftn12 p.Ebook-Fliesstext,
+#ftn13 p.Ebook-Fliesstext,
+#ftn14 p.Ebook-Fliesstext,
+#ftn15 p.Ebook-Fliesstext,
+#ftn16 p.Ebook-Fliesstext,
+#ftn17 p.Ebook-Fliesstext,
+#ftn18 p.Ebook-Fliesstext,
+#ftn19 p.Ebook-Fliesstext,
+#ftn20 p.Ebook-Fliesstext,
+#ftn21 p.Ebook-Fliesstext,
+#ftn22 p.Ebook-Fliesstext,
+#ftn23 p.Ebook-Fliesstext,
+#ftn24 p.Ebook-Fliesstext,
+#ftn25 p.Ebook-Fliesstext,
+#ftn26 p.Ebook-Fliesstext,
+#ftn27 p.Ebook-Fliesstext,
+#ftn28 p.Ebook-Fliesstext,
+#ftn29 p.Ebook-Fliesstext,
+#ftn30 p.Ebook-Fliesstext,
+#ftn31 p.Ebook-Fliesstext,
+#ftn32 p.Ebook-Fliesstext,
+#ftn33 p.Ebook-Fliesstext,
+#ftn34 p.Ebook-Fliesstext,
+#ftn35 p.Ebook-Fliesstext,
+#ftn36 p.Ebook-Fliesstext,
+#ftn37 p.Ebook-Fliesstext,
+#ftn38 p.Ebook-Fliesstext,
+#ftn39 p.Ebook-Fliesstext,
+#ftn40 p.Ebook-Fliesstext,
+#ftn41 p.Ebook-Fliesstext,
+#ftn42 p.Ebook-Fliesstext,
+#ftn43 p.Ebook-Fliesstext,
+#ftn44 p.Ebook-Fliesstext,
+#ftn45 p.Ebook-Fliesstext,
+#ftn46 p.Ebook-Fliesstext,
+#ftn47 p.Ebook-Fliesstext,
+#ftn48 p.Ebook-Fliesstext,
+#ftn49 p.Ebook-Fliesstext,
+#ftn50 p.Ebook-Fliesstext,
+#ftn51 p.Ebook-Fliesstext,
+#ftn52 p.Ebook-Fliesstext,
+#ftn53 p.Ebook-Fliesstext,
+#ftn54 p.Ebook-Fliesstext,
+#ftn55 p.Ebook-Fliesstext,
+#ftn56 p.Ebook-Fliesstext,
+#ftn57 p.Ebook-Fliesstext,
+#ftn58 p.Ebook-Fliesstext,
+#ftn59 p.Ebook-Fliesstext,
+#ftn60 p.Ebook-Fliesstext,
+#ftn61 p.Ebook-Fliesstext,
+#ftn62 p.Ebook-Fliesstext,
+#ftn63 p.Ebook-Fliesstext,
+#ftn64 p.Ebook-Fliesstext,
+#ftn65 p.Ebook-Fliesstext,
+#ftn66 p.Ebook-Fliesstext,
+#ftn67 p.Ebook-Fliesstext,
+#ftn68 p.Ebook-Fliesstext,
+#ftn69 p.Ebook-Fliesstext,
+#ftn70 p.Ebook-Fliesstext,
+#ftn71 p.Ebook-Fliesstext,
+#ftn72 p.Ebook-Fliesstext,
+#ftn73 p.Ebook-Fliesstext,
+#ftn74 p.Ebook-Fliesstext,
+#ftn75 p.Ebook-Fliesstext,
+#ftn76 p.Ebook-Fliesstext,
+#ftn77 p.Ebook-Fliesstext,
+#ftn78 p.Ebook-Fliesstext,
+#ftn79 p.Ebook-Fliesstext,
+#ftn80 p.Ebook-Fliesstext,
+#ftn81 p.Ebook-Fliesstext,
+#ftn82 p.Ebook-Fliesstext,
+#ftn83 p.Ebook-Fliesstext,
+#ftn84 p.Ebook-Fliesstext,
+#ftn85 p.Ebook-Fliesstext,
+#ftn86 p.Ebook-Fliesstext,
+#ftn87 p.Ebook-Fliesstext,
+#ftn88 p.Ebook-Fliesstext,
+#ftn89 p.Ebook-Fliesstext,
+#ftn90 p.Ebook-Fliesstext,
+#ftn91 p.Ebook-Fliesstext {
+    text-indent: 0;
+    font-style:italic;
+}
+
+p.Ebook-Footnote {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.708em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Titel + p.Ebook-Fliesstext,
+div.Foto-Ebook +  p.Ebook-Fliesstext,
+p.Foto-Ebook +  p.Ebook-Fliesstext,
+p.Ebook-ZU + p.Ebook-Fliesstext {
+    -epub-hyphens:none;
+    -webkit-hyphens:none;
+    color:#000000;
+    font-family:"Candida Std", serif;
+    font-size:0.833em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    line-height:1.25;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+    text-transform:initial;
+}
+p.Ebook-Titel + p.Ebook-Fliesstext::first-letter,
+p.Ebook-Titel + p.Ebook-Fliesstext:first-letter,
+p.Foto-Ebook +  p.Ebook-Fliesstext::first-letter,
+p.Foto-Ebook +  p.Ebook-Fliesstext:first-letter,
+div.Foto-Ebook +  p.Ebook-Fliesstext::first-letter,
+div.Foto-Ebook +  p.Ebook-Fliesstext:first-letter {
+    font-size:4em;
+    float:left;
+    line-height:1;
+    margin-top:-0.03em;
+    margin-right:0.05em;
+    -adobe-float-keep:column;
+    margin-bottom:-0.08em;
+}
+p.Ebook-Titel {
+    -epub-hyphens:none;
+    -webkit-hyphens:none;
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:1.167em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:bold;
+    line-height:1.2;
+    margin-bottom:25px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Footnote-1 {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.708em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Footnote-2 {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.708em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Rubriken {
+    -epub-hyphens:none;
+    -webkit-hyphens:none;
+    color:#58585a;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:1.167em;
+    font-style:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+    text-transform:uppercase;
+}
+p.Ebook-Footnote-3 {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.708em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Impressum {
+    -epub-hyphens:none;
+    -webkit-hyphens:none;
+    color:#000000;
+    font-family:"Candida Std", serif;
+    font-size:0.833em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    line-height:1.25;
+    margin-bottom:13px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:13px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Titel2 {
+    -epub-hyphens:none;
+    -webkit-hyphens:none;
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:1.167em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:bold;
+    line-height:1.2;
+    margin-bottom:25px;
+    margin-left:10px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Footnote-4 {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.708em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Footnote-5 {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.708em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Vorspann {
+    -epub-hyphens:none;
+    -webkit-hyphens:none;
+    color:#000000;
+    font-family:"Frutiger LT Std 47 Light Cn", sans-serif;
+    font-size:0.833em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.25;
+    margin-bottom:13px;
+    margin-left:10px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.x01Fu-notentext {
+    color:#000000;
+    font-family:"Candida Std", serif;
+    font-size:0.575em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    line-height:1.145;
+    margin-bottom:0px;
+    margin-left:10px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:justify;
+    text-decoration:none;
+    text-indent:-10px;
+}
+p.Ebook-Footnote-6 {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.708em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Footnote-7 {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.708em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Footnote-8 {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.708em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Footnote-9 {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.708em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Footnote-10 {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.708em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+p.Ebook-Footnote-11 {
+    color:#000000;
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.708em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:300;
+    line-height:1.2;
+    margin-bottom:0px;
+    margin-left:0px;
+    margin-right:0px;
+    margin-top:0px;
+    text-align:left;
+    text-decoration:none;
+    text-indent:0px;
+}
+span.Light {
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-style:normal;
+    font-weight:300;
+}
+span.Hochgestellt {
+    font-size:0.74em;
+    vertical-align:super;
+}
+span.Fu-note-hochgestellt {
+    font-family:"Candida Std", serif;
+    font-size:0.781em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    vertical-align:super;
+}
+span.Hochgestellt-1 {
+    font-size:0.74em;
+    vertical-align:super;
+}
+span.Hochgestellt-2 {
+    font-size:0.74em;
+    vertical-align:super;
+}
+span.Bold {
+    font-style:normal;
+    font-weight:bold;
+}
+span.Fu-note-hochgestellt-1 {
+    font-family:"Candida Std", serif;
+    font-size:0.781em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    vertical-align:super;
+}
+span.Kursiv {
+    font-style:italic;
+    font-weight:normal;
+}
+span.Fu-note-hochgestellt-2 {
+    font-family:"Candida Std", serif;
+    font-size:0.781em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    vertical-align:super;
+}
+span.Hochgestellt-3 {
+    font-size:0.74em;
+    vertical-align:super;
+}
+span.Fu-notenzeichen {
+    font-family:Arial, sans-serif;
+    font-size:0.833em;
+    font-style:normal;
+    font-weight:normal;
+    vertical-align:super;
+}
+span.Fu-note-hochgestellt-3 {
+    font-family:"Candida Std", serif;
+    font-size:0.781em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    vertical-align:super;
+}
+span.Link, a {
+    color:#000000;
+    text-decoration:underline;
+}
+span.Fu-note-hochgestellt-4 {
+    font-family:"Candida Std", serif;
+    font-size:0.781em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    vertical-align:super;
+}
+span.Hochgestellt-4 {
+    font-size:0.74em;
+    vertical-align:super;
+}
+span.Fu-note-hochgestellt-5 {
+    font-family:"Candida Std", serif;
+    font-size:0.781em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    vertical-align:super;
+}
+span.Hochgestellt-5 {
+    font-size:0.74em;
+    vertical-align:super;
+}
+span.Fu-note-hochgestellt-6 {
+    font-family:"Candida Std", serif;
+    font-size:0.781em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    vertical-align:super;
+}
+p.para-style-override-1 {
+    text-align:center;
+}
+p.para-style-override-2 {
+    font-style:normal;
+    font-weight:normal;
+    margin-top:38px;
+    text-align:center;
+}
+p.para-style-override-3 {
+    break-after:page;
+    margin-bottom:25px;
+    margin-top:13px;
+    text-align:center;
+}
+p.para-style-override-4 {
+    font-style:normal;
+    font-weight:normal;
+    margin-bottom:25px;
+    margin-top:13px;
+    text-align:center;
+}
+p.para-style-override-5 {
+    margin-top:3px;
+}
+p.para-style-override-6 {
+    font-style:normal;
+    font-weight:normal;
+    text-align:center;
+}
+p.para-style-override-7 {
+    margin-top:38px;
+    text-align:center;
+}
+p.para-style-override-8 {
+    text-indent:0px;
+}
+p.para-style-override-9 {
+    font-style:normal;
+    font-weight:normal;
+}
+p.para-style-override-10 {
+    break-after:page;
+    text-align:center;
+}
+span.char-style-override-1 {
+    font-size:2.833em;
+    float:left;
+    line-height:1;
+    margin-top:-0.004em;
+    margin-right:0.05em;
+    -adobe-float-keep:column;
+    margin-bottom:-0.31em;
+}
+span.char-style-override-2 {
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-style:normal;
+    font-weight:bold;
+}
+span.char-style-override-3 {
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-style:normal;
+    font-weight:300;
+}
+span.char-style-override-4 {
+    text-transform:uppercase;
+}
+span.char-style-override-5 {
+    font-style:normal;
+    font-weight:normal;
+}
+span.char-style-override-6 {
+    font-family:"Candida Std";
+    font-style:italic;
+    font-weight:normal;
+}
+span.char-style-override-7 {
+    font-size:0.518em;
+}
+span.char-style-override-8 {
+    font-size:0.583em;
+    vertical-align:sub;
+}
+span.char-style-override-9 {
+    font-size:0.583em;
+}
+span.char-style-override-10 {
+    font-family:"Frutiger LT Std 45 Light", sans-serif;
+    font-size:0.888em;
+    font-style:normal;
+    font-weight:bold;
+}
+span.char-style-override-11 {
+    font-family:"Frutiger LT Std 45 Light";
+    font-style:normal;
+    font-weight:normal;
+}
+span.char-style-override-12 {
+    font-family:"Candida Std";
+}
+span.char-style-override-13 {
+    font-size:0.546em;
+}
+span.char-style-override-14 {
+    font-size:0.888em;
+    font-style:normal;
+    font-weight:normal;
+}
+span.char-style-override-15 {
+    font-family:"Candida Std";
+    font-style:normal;
+    font-weight:bold;
+}
+span.char-style-override-16 {
+    font-family:"Candida Std", serif;
+    font-style:normal;
+    font-weight:normal;
+}
+span.char-style-override-17 {
+    -epub-ruby-position:over;
+    -epub-text-combine:horizontal;
+    color:#000000;
+    font-family:"Candida Std", serif;
+    font-size:1em;
+    font-style:normal;
+    font-variant:normal;
+    font-weight:normal;
+    text-decoration:none;
+}
+img.frame-1 {
+    height:497px;
+    width:340px;
+}
+img.frame-2 {
+    height:284px;
+    width:523px;
+}
+div.frame-3 {
+    margin:10px auto 10px auto;
+    text-align:center;
+}
+img.frame-4 {
+    height:62px;
+    width:62px;
+}
