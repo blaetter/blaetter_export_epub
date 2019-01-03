@@ -1,0 +1,7 @@
+pepgen:
+  salt: ""
+  base_url: ""
+  download_url: ""
+mobi:
+  base_path: ""
+  from_mail: ""

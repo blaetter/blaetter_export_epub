@@ -1,0 +1,13 @@
+blaetter_export_epub.generate:
+  title: EPUB
+  description: 'Generates ePubs based on Editions.'
+  route_name: blaetter_export_epub.generate
+  parent: system.admin_content
+  weight: -12
+blaetter_export_epub.settings:
+  title: EPUB - Settings
+  description: 'Administer the blaetter export epub settings.'
+  route_name: blaetter_export_epub.settings
+  parent: system.admin_config_content
+  weight: 20
+

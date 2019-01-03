@@ -1,7 +1,20 @@
 blaetter_export_epub.generate:
-  path: '/admin/structure/epub'
+  path: '/admin/content/epub'
   defaults:
     _form: '\Drupal\blaetter_export_epub\Form\EpubForm'
     _title: 'Export Epub'
   requirements:
     _permission: 'export epub'
+  options:
+    _admin_route: TRUE
+blaetter_export_epub.settings:
+  path: '/admin/settings/blaetter_export_epub'
+  defaults:
+    _form: '\Drupal\blaetter_export_epub\Form\EpubSettingsForm'
+    _title: 'Settings for blaetter export epub'
+  requirements:
+    _permission: 'administer blaetter export epub'
+  options:
+    _admin_route: TRUE
+route_callbacks:
+  - '\Drupal\blaetter_export_epub\Routing\EpubRoutes::routes'
