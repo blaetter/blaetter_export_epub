@@ -124,7 +124,6 @@ class EpubForm extends FormBase
     public function validateForm(array &$form, FormStateInterface $form_state)
     {
         $edition = \Drupal\node\Entity\Node::load($form_state->getValue('edition'));
-        drupal_set_message($edition->getType());
         if ($edition && 'ausgabe' != $edition->getType()) {
             $form_state->setErrorByName(
                 'edition',
