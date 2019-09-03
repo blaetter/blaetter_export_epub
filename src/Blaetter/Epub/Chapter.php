@@ -89,11 +89,15 @@ class Chapter
             && 'Impressum' != $this->data->getTitle()
             && 'Autorinnen und Autoren' != $this->data->getTitle()
         ) {
-            $output .=  '<br /><p class="Ebook-Fliesstext para-style-override-2"><span><img class="frame-4" src="' . MODULE_PATH_PREFIX . '/templates/image/palme.jpeg" alt="Eine Insel der Vernunft in einem Meer von Unsinn." /></span></p>';
+            $output .=  '<br /><p class="Ebook-Fliesstext para-style-override-2"><span>' .
+              '<img class="frame-4" src="' . MODULE_PATH_PREFIX . '/templates/image/palme.jpeg" ' .
+              'alt="Eine Insel der Vernunft in einem Meer von Unsinn." /></span></p>';
             $edition = $this->buildEdition();
             $pages = $this->buildPages();
             $image_credit = $this->buildImageCredit();
-            $output .= '<p class="Ebook-Fliesstext para-style-override-3"><span class="char-style-override-5">Aus: »Blätter« ' . $edition . ', Seite ' . $pages . $image_credit . '</span><span class="char-style-override-5"></span></p>';
+            $output .= '<p class="Ebook-Fliesstext para-style-override-3"><span class="char-style-override-5">' .
+              'Aus: »Blätter« ' . $edition . ', Seite ' . $pages . $image_credit . '</span>' .
+              '<span class="char-style-override-5"></span></p>';
         }
         // add the global footer
         $output .= $footer;
@@ -102,12 +106,25 @@ class Chapter
 
     public function buildEdition()
     {
-        $months = ['Januar' => '1', 'Februar' => '2', 'März' => '3', 'April' => '4', 'Mai' => '5', 'Juni' => '6', 'Juli' => '7', 'August' => '8', 'September' => '9', 'Oktober' => '10', 'November' => '11', 'Dezember' => '12'];
+        $months = [
+          'Januar'      => '1',
+          'Februar'     => '2',
+          'März'        => '3',
+          'April'       => '4',
+          'Mai'         => '5',
+          'Juni'        => '6',
+          'Juli'        => '7',
+          'August'      => '8',
+          'September'   => '9',
+          'Oktober'     => '10',
+          'November'    => '11',
+          'Dezember'    => '12'
+        ];
         if (!empty($this->data->edition)
             && !empty($this->data->year)
         ) {
             return $months[$this->data->edition] .
-                   '/' . $this->data->year;
+              '/' . $this->data->year;
         }
         return '';
     }
@@ -136,19 +153,21 @@ class Chapter
                     $image_desc = '';
                     if (false !== strpos($image_desc_raw, "\n")) {
                         $data = explode("\n", $image_desc_raw);
-                        foreach($data as $line) {
+                        foreach ($data as $line) {
                             if (false !== strpos($line, "|")) {
                                 $data = explode("|", $line);
-                                $image_desc .= '<span class="link"><a href="'.trim($data[1]).'" target="_blank" rel="nofollow">'.trim($data[0]).'</a></span>';
+                                $image_desc .= '<span class="link">' .
+                                  '<a href="'.trim($data[1]).'" target="_blank" rel="nofollow">'.trim($data[0]).'</a>' .
+                                  '</span>';
                             } else {
                                 $image_desc .= trim($line);
                             }
-
                         }
                     } elseif (false !== strpos($image_desc_raw, "|")) {
                         // here we have a pipe that indicates links within the descrption
                         $data = explode("|", $image_desc_raw);
-                        $image_desc = '<span class="link"><a href="'.trim($data[1]).'" target="_blank" rel="nofollow">'.trim($data[0]).'</a></span>';
+                        $image_desc = '<span class="link">' .
+                          '<a href="'.trim($data[1]).'" target="_blank" rel="nofollow">'.trim($data[0]).'</a></span>';
                     } else {
                         $image_desc = trim($image_desc_raw);
                     }
@@ -177,7 +196,8 @@ class Chapter
     {
         $output = $this->header;
         if (empty($this->rubric) || $this->rubric !== $this->data->rubric) {
-            $output .= '<p class="Ebook-Rubriken" id="id-' . md5($this->rubric) . '">' . $this->rubric . '<br /><br /></p>';
+            $output .= '<p class="Ebook-Rubriken" id="id-' . md5($this->rubric) . '">' .
+              $this->rubric . '<br /><br /></p>';
         }
         $output .= '<p class="Ebook-Titel">' . $this->title;
         if (!empty($this->subtitle)) {
@@ -292,10 +312,8 @@ class Chapter
                 } else {
                     $output[] = $field_value->getName();
                 }
-
             }
         }
         return $output;
     }
-
 }
