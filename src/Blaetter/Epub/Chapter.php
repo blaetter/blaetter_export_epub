@@ -208,7 +208,8 @@ class Chapter
         }
         $output .= '<br /></p>';
         if (!empty($this->image)) {
-            $output .= '<div class="Foto-Ebook frame-3"><img class="frame-2" src="' . $this->image . '" alt="" /><br /></div>';
+            $output .= '<div class="Foto-Ebook frame-3">' .
+              '<img class="frame-2" src="' . $this->image . '" alt="" /><br /></div>';
         }
         // remove wired footnote markup first
         // e.g. <a href="#_ftn5" name="_ftnref5" title=""><span><span><span><span>

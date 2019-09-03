@@ -23,15 +23,22 @@ class Cover extends Chapter
     public function getContent()
     {
         $output = $this->header;
-        $output .= '<p id="toc_marker-1" class="Ebook-Rubriken para-style-override-1">Titelbild ' . $this->title . '</p>';
-        if (!empty($this->image))
-        {
-            $output .= '<p class="Ebook-Titel2 para-style-override-1"><span><img class="frame-1" src="' . $this->image . '" alt="Titelbild der Ausgabe" /></span></p>';
+        $output .= '<p id="toc_marker-1" class="Ebook-Rubriken para-style-override-1">' .
+          'Titelbild ' . $this->title . '</p>';
+        if (!empty($this->image)) {
+            $output .= '<p class="Ebook-Titel2 para-style-override-1">' .
+              '<span><img class="frame-1" src="' . $this->image . '" alt="Titelbild der Ausgabe" /></span></p>';
         }
         if ('epub' == $this->export_type) {
-            $output .= '<p class="Ebook-Fliesstext para-style-override-1"><span class="Bold char-style-override-12">XXXXX </span><br /><span class="char-style-override-3">Mit dem Erwerb des E-Books erhalten Sie das einfache, nicht übertragbare Recht zur allein privaten, nichtgewerblichen Nutzung.</span></p>';
+            $output .= '<p class="Ebook-Fliesstext para-style-override-1">' .
+              '<span class="Bold char-style-override-12">XXXXX </span><br />' .
+              '<span class="char-style-override-3">' .
+              'Mit dem Erwerb des E-Books erhalten Sie das einfache, nicht übertragbare Recht zur allein privaten, ' .
+              'nichtgewerblichen Nutzung.</span></p>';
         } else {
-            $output .= '<p class="Ebook-Fliesstext para-style-override-1"><span class="char-style-override-3">Mit dem Erwerb des E-Books erhalten Sie das einfache, nicht übertragbare Recht zur allein privaten, nichtgewerblichen Nutzung.</span></p>';
+            $output .= '<p class="Ebook-Fliesstext para-style-override-1">' .
+              '<span class="char-style-override-3">Mit dem Erwerb des E-Books erhalten Sie das einfache, nicht ' .
+              'übertragbare Recht zur allein privaten, nichtgewerblichen Nutzung.</span></p>';
         }
         $output .= $this->footer;
         return $output;
@@ -54,5 +61,4 @@ class Cover extends Chapter
         $this->export_type = $type;
         return $this;
     }
-
 }
