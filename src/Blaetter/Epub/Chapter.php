@@ -216,9 +216,11 @@ class Chapter
         $content = preg_replace(
             [
                 '/<hr.*\/>/i',
+                '/\[book:[^\]+]/i'
             ],
             [
                 '<hr />',
+                ''
             ],
             $this->content
         );
@@ -240,7 +242,6 @@ class Chapter
                 '</span></span>',
                 '<sup><sup><span>',
                 '</sup></sup></span>'
-
             ],
             [
                 '<p class="Ebook-Fliesstext">',
