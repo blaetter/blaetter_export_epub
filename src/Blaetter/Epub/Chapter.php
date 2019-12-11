@@ -216,7 +216,8 @@ class Chapter
         $content = preg_replace(
             [
                 '/<hr.*\/>/i',
-                '/\[book:[^\]+]/i'
+                '/\[block:[^\]+]/i',
+                '/\[media:[^\]+]/i'
             ],
             [
                 '<hr />',
