@@ -90,7 +90,7 @@ class Chapter
             && 'Autorinnen und Autoren' != $this->data->getTitle()
         ) {
             $output .=  '<br /><p class="Ebook-Fliesstext para-style-override-2"><span>' .
-              '<img class="frame-4" src="' . MODULE_PATH_PREFIX . '/templates/image/palme.jpeg" ' .
+              '<img class="frame-4" src="' . self::MODULE_PATH_PREFIX . '/templates/image/palme.jpeg" ' .
               'alt="Eine Insel der Vernunft in einem Meer von Unsinn." /></span></p>';
             $edition = $this->buildEdition();
             $pages = $this->buildPages();
