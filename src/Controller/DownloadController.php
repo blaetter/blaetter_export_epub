@@ -111,7 +111,9 @@ class DownloadController extends ControllerBase
                 ]
             );
             $this->messenger()->addError(
-                'There was an error generating your epub. Please try again.'
+                $this->t(
+                    'There was an error generating your epub. Please try again.'
+                )
             );
             return new RedirectResponse(
                 Url::fromRoute('entity.node.canonical', ['node' => $node->id()])->toString()
@@ -145,10 +147,12 @@ class DownloadController extends ControllerBase
                 ]
             );
             $this->messenger()->addError(
-                'Your epub could not be downloaded, please contact us and provide the following error message: %error_message',
-                [
-                    '%error_message' => $response
-                ]
+                $this->t(
+                    'Your epub could not be downloaded, please contact us and provide the following error message: %error_message',
+                    [
+                        '%error_message' => $response
+                    ]
+                )
             );
         }
 
@@ -173,9 +177,11 @@ class DownloadController extends ControllerBase
         // if not, we redirect him to the profile page with a hint to fill out the required fields.
         if (empty($this->current_user->get('field_kindle_email')->value)) {
             $this->messenger()->addMessage(
-                'In order to get your mobi sended to your Kindle reader, you need to provide an Kindle mail address. ' .
-                'Please fill out the fields for Kindle mail and domain settings at this page. ' .
-                'After submitting the form you will be redirected to the mobi download page again.'
+                $this->t(
+                    'In order to get your mobi sended to your Kindle reader, you need to provide an Kindle mail address. ' .
+                    'Please fill out the fields for Kindle mail and domain settings at this page. ' .
+                    'After submitting the form you will be redirected to the mobi download page again.'
+                )
             );
             return new RedirectResponse(
                 Url::fromRoute(
@@ -266,11 +272,15 @@ class DownloadController extends ControllerBase
                             '[Mobi Download]: Could not send message.'
                         );
                         $this->messenger()->addError(
-                            'Mobi could not be send to your Kindle mail address.'
+                            $this->t(
+                                'Mobi could not be send to your Kindle mail address.'
+                            )
                         );
                     } else {
                         $this->messenger()->addMessage(
-                            'Mobi was successfully send to your Kindle mail address.'
+                            $this->t(
+                                'Mobi was successfully send to your Kindle mail address.'
+                            )
                         );
                     }
                 } else {
@@ -281,7 +291,9 @@ class DownloadController extends ControllerBase
                         ]
                     );
                     $this->messenger()->addMessage(
-                        'The system could not find the mobi file for the requested edition. Please try again later.'
+                        $this->t(
+                            'The system could not find the mobi file for the requested edition. Please try again later.'
+                        )
                     );
                 }
             }
