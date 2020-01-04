@@ -217,10 +217,13 @@ class Chapter
             [
                 '/<hr.*\/>/i',
                 '/\[block:[^\]+]/i',
-                '/\[media:[^\]+]/i'
+                '/\[media:[^\]+]/i',
+                '/\[content:[^\]+]/i'
             ],
             [
                 '<hr />',
+                '',
+                '',
                 ''
             ],
             $this->content
