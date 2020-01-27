@@ -241,6 +241,7 @@ class DownloadController extends ControllerBase
                     $from = $this->config->get('mobi.from_mail');
                     $language_code = \Drupal::languageManager()->getDefaultLanguage()->getId();
                     $params = [
+                        'from' => $from,
                         'subject' => $this->t(
                             'Your mobi download for Blätter edition @edition @year',
                             [
