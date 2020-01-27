@@ -215,7 +215,7 @@ class DownloadController extends ControllerBase
             if ($node->hasField('field_jahr') && $node->hasField('field_ausgabe')) {
                 $year = $node->get('field_jahr')->entity->getName();
                 $edition = $node->get('field_ausgabe')->entity->getName();
-                $edition_path = strftime("%g", strtotime($year)) . strftime("%m", strtotime($edition));
+                $edition_path = strftime("%y", strtotime($year)) . strftime("%m", strtotime($edition));
 
                 $mobi_filename = 'ausgabe' . $edition_path . '.mobi';
                 $mobi_file = $this->config->get('mobi.base_path') .
