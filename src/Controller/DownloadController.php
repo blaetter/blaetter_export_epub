@@ -215,7 +215,7 @@ class DownloadController extends ControllerBase
             if ($node->hasField('field_jahr') && $node->hasField('field_ausgabe')) {
                 $year = $node->get('field_jahr')->entity->getName();
                 $edition = $node->get('field_ausgabe')->entity->getName();
-                $edition_path = strftime("%y", strtotime($year . '-01-01')) . strftime("%m", strtotime($edition));
+                $edition_path = strftime("%y", strtotime($year . '-01-01')) . $this->convertMonthNameToNumber($edition);
                 $mobi_filename = 'ausgabe' . $edition_path . '.mobi';
                 $mobi_file = $this->config->get('mobi.base_path') .
                 '/' .
@@ -314,5 +314,31 @@ class DownloadController extends ControllerBase
         return User::load(
             $this->currentUser()->id()
         );
+    }
+
+    /**
+     * Converts german month name to month number
+     *
+     * @param string $month
+     * @return string
+     */
+    public function convertMonthNameToNumber($month)
+    {
+        $months = [
+          "Januar" => '01',
+          "Februar" => '02',
+          "März" => '03',
+          "April" => '04',
+          "Mai" => '05',
+          "Juni" => '06',
+          "Juli" => '07',
+          "August" => '08',
+          "September" => '09',
+          "Oktober" => '10',
+          "November" => '11',
+          "Dezember" => '12'
+        ];
+
+        return $months[$month] ?? '';
     }
 }
