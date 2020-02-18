@@ -69,9 +69,9 @@ class Chapter
         return '';
     }
 
-    public function getAuthors()
+    public function getAuthors($include_bios = false)
     {
-        $authors = $this->getTaxonomyData(self::TAXONOMY_AUTHOR);
+        $authors = $this->getTaxonomyData(self::TAXONOMY_AUTHOR, $include_bios);
         return $authors;
     }
 
@@ -304,17 +304,56 @@ class Chapter
         return $this->filename;
     }
 
-    protected function getTaxonomyData($field_name)
+    /**
+     * get Taxonomy data from field content
+     *
+     * @param string $field_name The field name to get
+     * @param boolean $include_bio Flag to indicate if the bio notice of the author taxonomy should be included or not.
+     * @return array $output
+     */
+    protected function getTaxonomyData($field_name, $include_bio = false)
     {
         $output = [];
         if ($this->data->hasField($field_name)) {
             $field_values = $this->data->get($field_name)->referencedEntities();
             foreach ($field_values as $field_value) {
                 if (self::TAXONOMY_AUTHOR === $field_name) {
-                    //special handling for authors here, as we need the sorting later
-                    $parts = explode(' ', $field_value->getName());
-                    $last_name = array_pop($parts);
-                    $output[$last_name] = $field_value->getName();
+                    $bio_notice = '';
+                    // get sort field if set
+                    if ($field_value->hasField('field_sort')) {
+                        $last_name = $field_value->get('field_sort')->value;
+                    } else {
+                        //special handling for authors here, as we need the sorting later
+                        $parts = explode(' ', $field_value->getName());
+                        $last_name = array_pop($parts);
+                    }
+
+                    // get the bio notice content depending on the availability of the short bio notice or the full
+                    // bio notice.
+                    if ($field_value->hasField('field_short_bio')
+                        && !empty($field_value->get('field_short_bio')->value)
+                        && true === $include_bio
+                    ) {
+                        $bio_notice = ', ' . $field_value->get('field_short_bio')->value;
+                    } elseif ($field_value->hasField('field_bio')
+                        && !empty($field_value->get('field_bio')->value)
+                        && true === $include_bio
+                    ) {
+                        $bio_notice = ', ' . strip_tags($field_value->get('field_bio')->value);
+                    }
+
+                    if (true === $include_bio) {
+                        // get the author name and bio notice, remove the author name if it is also provided within the
+                        // bio notice
+                        $output[$last_name] = '<span class="char-style-override-15">' .
+                          $field_value->getName() . '</span>' . str_replace(
+                              $field_value->getName() . ',',
+                              '',
+                              $bio_notice
+                          );
+                    } else {
+                        $output[$last_name] = $field_value->getName();
+                    }
                 } else {
                     $output[] = $field_value->getName();
                 }

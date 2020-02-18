@@ -262,7 +262,7 @@ class EpubForm extends FormBase
                 // Add current sublevel to TOC
                 $epub->subLevel();
             }
-            $authors = array_merge($authors, $chapter->getAuthors());
+            $authors = array_merge($authors, $chapter->getAuthors(true));
             // Add the chapter
             $epub->addChapter($chapter);
         }
@@ -272,9 +272,9 @@ class EpubForm extends FormBase
         ksort($authors, SORT_LOCALE_STRING);
         // create the markup for the author page
         $authors_string = '<p class="Ebook-Fliesstext-ohneEinzug">' .
-                          '<span class="char-style-override-15">' .
-                          implode('</span>, Kurzbiographie</p><p class="Ebook-Fliesstext-ohneEinzug">&#160;</p><p class="Ebook-Fliesstext-ohneEinzug"><span class="char-style-override-15">', $authors) .
-                          '</span>, Kurzbiographie</p>' .
+                          '' .
+                          implode('</p><p class="Ebook-Fliesstext-ohneEinzug">&#160;</p><p class="Ebook-Fliesstext-ohneEinzug">', $authors) .
+                          '</p>' .
                           '<p class="Ebook-Fliesstext-ohneEinzug">&#160;</p>';
 
         // create a fake node object to use it within the Chapter class
