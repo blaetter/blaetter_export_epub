@@ -42,9 +42,11 @@
     src : url("./font/FrutigerLTStd-LightCn.otf");
 }
 h2 {
-	font-size:0.833em;
-	font-family:"Frutiger LT Std 45 Light", sans-serif;
+	  font-size:0.833em;
+	  font-family:"Frutiger LT Std 45 Light", sans-serif;
     line-height:1.25;
+    margin-bottom:10px;
+    margin-top:15px;
 }
 body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, p, pre, code, blockquote {
     margin:0;
