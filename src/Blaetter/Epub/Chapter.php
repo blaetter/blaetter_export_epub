@@ -12,21 +12,25 @@ class Chapter
     const TAXONOMY_MONTH = 'field_ausgabe';
     const MODULE_PATH_PREFIX = 'https://www.blaetter.de/modules/contrib/blaetter_export_epub';
 
-    public $title;
+    public $author;
 
     public $content;
 
-    public $rubric;
-
-    public $image;
-
-    public $author;
+    public $data;
 
     public $filename;
 
+    public $footer;
+
     public $header;
 
-    public $footer;
+    public $image;
+
+    public $rubric;
+
+    public $subtitle;
+
+    public $title;
 
     /**
      * Creates an instance of the cover model from the incoming data.
@@ -148,9 +152,9 @@ class Chapter
             if (!empty($this->data->field_primary_picture->first()->get('title')->getString())) {
                 //@see template.php in the theming folder...
                 $image_desc_raw = $this->data->field_primary_picture->first()->get('title')->getString();
+                $image_desc = '';
                 if (!empty($image_desc_raw)) {
                     //initiate image description string
-                    $image_desc = '';
                     if (false !== strpos($image_desc_raw, "\n")) {
                         $data = explode("\n", $image_desc_raw);
                         foreach ($data as $line) {

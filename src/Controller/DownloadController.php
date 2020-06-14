@@ -4,12 +4,13 @@ namespace Drupal\blaetter_export_epub\Controller;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\Url;
-use Drupal\user\Entity\User;
 use Drupal\node\Entity\Node;
 use Drupal\nodeshop\NodeShop;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -63,7 +64,7 @@ class DownloadController extends ControllerBase
      * Controller for the download epub action
      *
      * @param Node $node
-     * @return void
+     * @return RedirectResponse
      */
     public function downloadEpub($node = null)
     {
@@ -137,10 +138,9 @@ class DownloadController extends ControllerBase
             exit;
         } else {
             \Drupal::logger('blaetter_export_epub')->error(
-                '[EPUB Export][Download epub]: ePub Error reveived: @handle for node @nid with watermark @watermark ' .
+                '[EPUB Export][Download epub]: ePub Error reveived for node @nid with watermark @watermark ' .
                 'and response %response',
                 [
-                    '@handle' => $handle,
                     '@nid' => $node->id(),
                     '@watermark' => $watermark,
                     '%response' => $response,
@@ -169,7 +169,7 @@ class DownloadController extends ControllerBase
      * If we have all information and the file exists, its sended as an attachment to the given mail address.
      *
      * @param Node $node
-     * @return void
+     * @return RedirectResponse
      */
     public function downloadMobi($node = null)
     {
@@ -212,9 +212,13 @@ class DownloadController extends ControllerBase
             // In order to do so, we need to convert the given edition - wich is the string of a month - to
             // the nummber of the month and extract the last two digits of the year (so 2019 would becomde 19) and
             // december would become 12.
-            if ($node->hasField('field_jahr') && $node->hasField('field_ausgabe')) {
-                $year = $node->get('field_jahr')->entity->getName();
-                $edition = $node->get('field_ausgabe')->entity->getName();
+            if ($node->hasField('field_jahr')
+                && $node->hasField('field_ausgabe')
+                && $node->get('field_jahr')->entity instanceof FieldableEntityInterface
+                && $node->get('field_ausgabe')->entity instanceof FieldableEntityInterface
+            ) {
+                $year = $node->get('field_jahr')->entity->get('name')->value;
+                $edition = $node->get('field_ausgabe')->entity->get('name')->value;
                 $edition_path = strftime("%y", strtotime($year . '-01-01')) . $this->convertMonthNameToNumber($edition);
                 $mobi_filename = 'ausgabe' . $edition_path . '.mobi';
                 $mobi_file = $this->config->get('mobi.base_path') .
