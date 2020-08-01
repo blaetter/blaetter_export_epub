@@ -228,7 +228,6 @@ class DownloadController extends ControllerBase
                 $edition_path .
                 '/' .
                 $mobi_filename;
-
                 // if the file exists, proceed
                 if (file_exists($mobi_file)) {
                     // The attachments needs to be provided as stdClass, so we build up the
@@ -241,7 +240,7 @@ class DownloadController extends ControllerBase
 
                     // now we prepare the mail and invoke the drupal mail service here
                     $mailManager = \Drupal::service('plugin.manager.mail');
-                    $from = $this->config->get('mobi.from_mail');
+                    $reply_to = $from = $this->config->get('mobi.from_mail');
                     $language_code = \Drupal::languageManager()->getDefaultLanguage()->getId();
                     $params = [
                         'from' => $from,
@@ -265,7 +264,7 @@ class DownloadController extends ControllerBase
                         $mailto,
                         $language_code,
                         $params,
-                        $from,
+                        $reply_to,
                         true
                     );
 
