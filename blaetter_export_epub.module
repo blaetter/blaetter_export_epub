@@ -40,6 +40,7 @@ function blaetter_export_epub_mail(string $key, array &$message, array $params)
         'Content-Type'              => 'text/html; charset=UTF-8; format=flowed; delsp=yes',
         'Content-Transfer-Encoding' => '8Bit',
         'X-Mailer'                  => 'Drupal',
+        'From'                      => $params['from'],
     ];
 
     switch ($key) {
@@ -47,7 +48,6 @@ function blaetter_export_epub_mail(string $key, array &$message, array $params)
             foreach ($headers as $key => $value) {
                 $message['headers'][$key] = $value;
             }
-            $message['from'] = $params['from'];
             $message['subject'] = $params['subject'];
             $message['body'][] = $params['body'];
             $message['files'][] = $params['files'];
