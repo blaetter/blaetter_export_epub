@@ -25,7 +25,7 @@ class EpubCommands extends DrushCommands
      * @aliases bl-watermark
      * @usage blaetter_export_epub:watermark node_id user_id
      */
-    public function watermark($node_id, $user_id)
+    public function watermark($node_id, $user_id, $date = 'today')
     {
         $this->output()->writeln('Checking Node ' . $node_id . ' for user ' . $user_id);
 
@@ -35,7 +35,8 @@ class EpubCommands extends DrushCommands
         $credentials = new EpubCredentials(
             $node,
             $user,
-            $this->config->get('pepgen.salt', '')
+            $this->config->get('pepgen.salt', ''),
+            strftime($date)
         );
         $this->output()->writeln($credentials->getWatermark());
         $this->output()->writeln($credentials->getToken());

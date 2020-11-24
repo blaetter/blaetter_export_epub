@@ -23,17 +23,25 @@ class EpubCredentials
 
     private $salt;
 
+    private $timestamp;
+
     private $token;
 
     private $watermark;
 
-    public function __construct(Node $node, User $user, $salt)
+    public function __construct(Node $node, User $user, $salt, $timestamp = '')
     {
         $this->node_id = $node->id();
         $this->first_name = $user->get('field_first_name')->value;
         $this->last_name = $user->get('field_last_name')->value;
         $this->mail = $user->get('mail')->value;
         $this->salt = $salt;
+
+        if (!empty($timestamp)) {
+            $this->timestamp = $timestamp;
+        } else {
+            $this->timestamp = strftime("%d.%m.%Y");
+        }
 
         $this->createWatermark();
 
@@ -46,7 +54,7 @@ class EpubCredentials
             $this->node_id .
             $this->salt .
             $this->watermark .
-            strftime("%d.%m.%Y")
+            $this->timestamp
         );
         return $this;
     }
