@@ -1,0 +1,5 @@
+services:
+  blaetter_export_epub.commands:
+    class: \Drupal\blaetter_export_epub\Commands\EpubCommands
+    tags:
+      - { name: drush.command }

@@ -2,6 +2,7 @@
 
 namespace Drupal\blaetter_export_epub\Controller;
 
+use Drupal\blaetter_export_epub\EpubCredentials;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -68,19 +69,10 @@ class DownloadController extends ControllerBase
      */
     public function downloadEpub($node = null)
     {
-        $watermark = htmlspecialchars(
-            $this->current_user->get('field_first_name')->value .
-            ' ' .
-            $this->current_user->get('field_last_name')->value .
-            ', E-Mail: ' .
-            $this->current_user->get('mail')->value
-        );
-
-        $token = md5(
-            $node->id() .
-            $this->config->get('pepgen.salt', '') .
-            $watermark .
-            strftime("%d.%m.%Y")
+        $credentials = new EpubCredentials(
+            $node,
+            $this->current_user,
+            $this->config->get('pepgen.salt', '')
         );
 
         // Get the Drupal http client
@@ -96,9 +88,9 @@ class DownloadController extends ControllerBase
                         'Content-type' => 'application/x-www-form-urlencoded',
                     ],
                     'form_params' => [
-                        'watermark' => $watermark,
+                        'watermark' => $credentials->getWatermark(),
                         'id' => $node->id(),
-                        'token' => $token,
+                        'token' => $credentials->getToken(),
                     ],
                 ]
             );
@@ -124,7 +116,7 @@ class DownloadController extends ControllerBase
         if (200 == $request->getStatusCode() && 'Success' === $response) {
             $handle = $this->config->get('pepgen.download_url') .
             '/' .
-            $token .
+            $credentials->getToken() .
             '.' .
             $node->id() .
             '.epub';
@@ -142,7 +134,7 @@ class DownloadController extends ControllerBase
                 'and response %response',
                 [
                     '@nid' => $node->id(),
-                    '@watermark' => $watermark,
+                    '@watermark' => $credentials->getWatermark(),
                     '%response' => $response,
                 ]
             );
