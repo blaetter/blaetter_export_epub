@@ -56,7 +56,8 @@ class DownloadController extends ControllerBase
         return AccessResult::allowedIf(
             NodeShop::grantUserAccess(
                 $node,
-                $this->current_user
+                $this->current_user,
+                true
             )
         );
     }
