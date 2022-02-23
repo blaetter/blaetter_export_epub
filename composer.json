@@ -6,8 +6,12 @@
     "license": "GPL-2.0+",
     "version": "1.x-dev",
     "minimum-stability": "dev",
+    "repositories": [{
+        "type": "vcs",
+        "url": "git@github.com:LimeGreenDigital/PHPePub.git"
+    }],
     "require": {
-        "grandt/phpepub": ">=4.0.3",
+        "limegreen/phpepub": "*",
         "php": ">=7.0"
     }
 }
