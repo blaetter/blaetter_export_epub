@@ -7,7 +7,7 @@
     "version": "1.x-dev",
     "minimum-stability": "dev",
     "require": {
-        "wallabag/phpepub ": "*",
+        "wallabag/phpepub": "*",
         "php": ">=7.0"
     }
 }
