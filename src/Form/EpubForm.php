@@ -175,6 +175,9 @@ class EpubForm extends FormBase
             "de"
         );
 
+        // get the module base path
+        $module_base_path = \Drupal::service('extension.path.resolver')->getPath('module', 'blaetter_export_epub');
+
         // get some template data
         //  - $header_raw: The Markup for the header
         //  - $footer_raw: The Markup for the footer
@@ -182,24 +185,19 @@ class EpubForm extends FormBase
         //  - $authors_raw: The Markup for the author overview page
         //  - $css_raw: The css that needs to be injected into the book
         $header_raw = file_get_contents(
-            drupal_get_path('module', 'blaetter_export_epub') .
-            '/templates/head.tmpl'
+            $module_base_path . '/templates/head.tmpl'
         );
         $footer_raw = file_get_contents(
-            drupal_get_path('module', 'blaetter_export_epub') .
-            '/templates/foot.tmpl'
+            $module_base_path . '/templates/foot.tmpl'
         );
         $imprint_raw = file_get_contents(
-            drupal_get_path('module', 'blaetter_export_epub') .
-            '/templates/imprint.tmpl'
+            $module_base_path . '/templates/imprint.tmpl'
         );
         $authors_raw = file_get_contents(
-            drupal_get_path('module', 'blaetter_export_epub') .
-            '/templates/authors.tmpl'
+            $module_base_path . '/templates/authors.tmpl'
         );
         $css_raw = file_get_contents(
-            drupal_get_path('module', 'blaetter_export_epub') .
-            '/templates/css/styles.css'
+            $module_base_path . '/templates/css/styles.css'
         );
 
         // Create an instance of Cover to hold the cover data of the epub
