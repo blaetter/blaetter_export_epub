@@ -74,7 +74,6 @@ class EpubForm extends FormBase
             '#default_value'    => 'epub',
             '#options'          => [
                 'epub' => 'Export ePub (mit Wasserzeichen)',
-                'mobi' => 'Export mobi (ohne Wasserzeichen)'
             ],
         ];
 
