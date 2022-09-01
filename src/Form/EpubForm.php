@@ -52,12 +52,10 @@ class EpubForm extends FormBase
             '#title'            => $this->t('choose edition'),
             '#type'             => 'details',
             '#description'      => 'Hier können Ausgaben ausgewählt und als ePub ' .
-                                   'heruntegeladen werden. Es gibt zwei ' .
-                                   'verschiedene Export-Aktionen: "Export ePub" ' .
-                                   'und "Export mobi". In beiden Fällen wird eine ' .
-                                   'ePub-Datei erzeugt, im Falle "Export ePub" ' .
-                                   'mit, im Fall "Export mobi" ohne das ' .
-                                   'Wasserzeichen für die mobi-Variante. ',
+                                   'heruntegeladen werden.<br /><br />' .
+                                   'Bis September 2022 gab es zwei verschiedene Export-Aktionen: "Export ePub" ' .
+                                   'und "Export mobi".<br />' .
+                                   'Seit September 2022 wird mobi nicht mehr benötigt und wurde daher entfernt',
             '#open'             => true,
         ];
 
