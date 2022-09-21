@@ -336,8 +336,7 @@ class EpubForm extends FormBase
 
         // add some fonts to the archive as they're not added automatically for
         // whatever reason.
-        $font_path = drupal_get_path('module', 'blaetter_export_epub') .
-            '/templates/font/';
+        $font_path = $module_base_path . '/templates/font/';
 
         $epub->addLargeFile(
             'font/CandidaStd-Bold.otf',
