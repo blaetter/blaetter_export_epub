@@ -49,7 +49,7 @@ class EpubCredentials
             $this->node_id .
             $this->salt .
             $this->watermark .
-            strftime("%d.%m.%Y", $this->timestamp)
+            date('d.m.Y', $this->timestamp)
         );
         return $this;
     }
