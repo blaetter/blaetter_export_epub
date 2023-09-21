@@ -100,7 +100,7 @@ class DownloadController extends ControllerBase
             \Drupal::logger('blaetter_export_epub')->error(
                 '[EPUB Export][Download epub]: Error during pepgen request for node @nid with message %message',
                 [
-                    '@uuid' => $node->id(),
+                    '@nid' => $node->id(),
                     '%message' => $e->getMessage(),
                 ]
             );
