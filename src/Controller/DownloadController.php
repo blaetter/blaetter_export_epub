@@ -89,7 +89,7 @@ class DownloadController extends ControllerBase
                         'Content-type' => 'application/x-www-form-urlencoded',
                     ],
                     'form_params' => [
-                        'watermark' => $credentials->getWatermark(),
+                        'watermark' => urlencode($credentials->getWatermark()),
                         'id' => $node->id(),
                         'token' => $credentials->getToken(),
                     ],
