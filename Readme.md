@@ -8,5 +8,5 @@ You are, however, free to fork or use this module for your own purposes.
 
 ## Hints
 
-- The export will include some webfonts into the ePun. As of copyrights theese fonts are not part of this repository. The fonts need to be installed afterinstalling the module.
+- The export will include some webfonts into the ePub. As of copyrights theese fonts are not part of this repository. The fonts need to be installed afterinstalling the module.
 - There are some domain and path references in the code that are pinned to specific domains and paths of the Drupal installation of the Blätter.
