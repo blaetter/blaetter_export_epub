@@ -78,7 +78,7 @@ class DownloadController extends ControllerBase
 
         // Get the Drupal http client
         $client = \Drupal::httpClient();
-        // try to make the paypal create payment request and catch any exception that is thrown.
+        // try to make the pepgen request and catch any exception that is thrown.
         // If an exception is thrown, we display a message to the end user and log the error message in
         // the drupal watchdog.
         try {
