@@ -68,7 +68,9 @@ class Chapter
             //     'www.blaetter.de',
             //     file_create_url($this->data->get('field_primary_picture')->entity->getFileUri())
             // );
-            return file_create_url($this->data->get('field_primary_picture')->entity->getFileUri());
+
+            return \Drupal::service('file_url_generator')
+              ->generateAbsoluteString($this->data->get('field_primary_picture')->entity->getFileUri());
         }
         return '';
     }

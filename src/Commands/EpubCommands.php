@@ -36,7 +36,7 @@ class EpubCommands extends DrushCommands
             $node,
             $user,
             $this->config->get('pepgen.salt', ''),
-            strftime($date)
+            strtotime($date)
         );
         $this->output()->writeln($credentials->getWatermark());
         $this->output()->writeln($credentials->getToken());

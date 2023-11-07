@@ -37,6 +37,7 @@ class EpubForm extends FormBase
     {
 
         $nids = \Drupal::entityQuery('node')
+            ->accessCheck(TRUE)
             ->condition('status', 1)
             ->condition('type', 'ausgabe')
             ->sort('nid', 'DESC')

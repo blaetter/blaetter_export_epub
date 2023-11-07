@@ -212,7 +212,9 @@ class DownloadController extends ControllerBase
             ) {
                 $year = $node->get('field_jahr')->entity->get('name')->value;
                 $edition = $node->get('field_ausgabe')->entity->get('name')->value;
-                $edition_path = strftime("%y", strtotime($year . '-01-01')) . $this->convertMonthNameToNumber($edition);
+
+                $edition_path = \Drupal::service('date.formatter')->format(strtotime($year . '-01-01'), 'custom', 'y') .
+                  $this->convertMonthNameToNumber($edition);
                 $mobi_filename = 'ausgabe' . $edition_path . '.mobi';
                 $mobi_file = $this->config->get('mobi.base_path') .
                 '/' .
