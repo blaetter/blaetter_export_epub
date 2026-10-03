@@ -97,4 +97,25 @@ class EpubFormTest extends UnitTestCase
             );
         }
     }
+
+    /**
+     * The watermark in the imprint is followed by a line break, so it does not run into the next sentence.
+     */
+    public function testImprintWatermarkIsFollowedByLineBreak(): void
+    {
+        $imprint = file_get_contents(dirname(__DIR__, 4) . '/templates/imprint.tmpl');
+        $this->assertStringContainsString('___WATERMARK___', $imprint);
+
+        $this->assertMatchesRegularExpression('#^<span [^>]*>XXXXX </span><br />$#', EpubForm::IMPRINT_WATERMARK);
+        // pepgen replaces the placeholder with inline text
+        $this->assertStringContainsString(
+            '<p class="Ebook-Impressum"><span class="Bold char-style-override-12">Lizenziert für Erika Muster </span>'
+            . '<br />',
+            str_replace(
+                'XXXXX',
+                'Lizenziert für Erika Muster',
+                str_replace('___WATERMARK___', EpubForm::IMPRINT_WATERMARK, $imprint)
+            )
+        );
+    }
 }

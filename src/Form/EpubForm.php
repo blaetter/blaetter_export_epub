@@ -21,6 +21,13 @@ use Drupal\node\Entity\Node;
 class EpubForm extends FormBase
 {
     /**
+     * The placeholder for the watermark within the imprint, pepgen replaces XXXXX with the personal watermark.
+     *
+     * The watermark is inline text, the line break separates it from the following sentence about the rights of use.
+     */
+    const IMPRINT_WATERMARK = '<span class="Bold char-style-override-12">XXXXX </span><br />';
+
+    /**
      * Build the form.
      *
      * A build form method constructs an array that defines how markup and
@@ -174,7 +181,10 @@ class EpubForm extends FormBase
             $edition->id(),
             "Blätter für deutsche und internationale Politik",
             "https://www.blaetter.de/node/" . $edition->id(),
-            "de"
+            "de",
+            // links and images relative to the website
+            \Drupal::request()->getSchemeAndHttpHost(),
+            \Drupal::root()
         );
 
         // get the module base path
@@ -310,7 +320,7 @@ class EpubForm extends FormBase
                     0 => [
                         'value' => str_replace(
                             '___WATERMARK___',
-                            '<span class="Bold char-style-override-12">XXXXX </span>',
+                            self::IMPRINT_WATERMARK,
                             $imprint_raw
                         )
                     ]

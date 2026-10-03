@@ -24,6 +24,37 @@ class Generator
     public $rubric;
 
     /**
+     * The scheme and host of the website, e.g. https://www.blaetter.de
+     *
+     * @var string
+     */
+    private $base_url;
+
+    /**
+     * The root directory of the Drupal installation, images of the website are read from it.
+     *
+     * @var string|null
+     */
+    private $local_root;
+
+    /**
+     * The images of the website, that were added to the epub, keyed by their source.
+     *
+     * @var array
+     */
+    private $local_images = [];
+
+    /**
+     * Image types that may be added to an EPUB 2.
+     */
+    const IMAGE_TYPES = [
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'gif' => 'image/gif',
+    ];
+
+    /**
      * Creates an instance of the generator
      *
      * @param string $title
@@ -36,9 +67,15 @@ class Generator
      *  The unique identifier of the epub
      * @param string $language
      *  The language of the epub
+     * @param string $base_url
+     *  The scheme and host of the website, used for links relative to the website
+     * @param string|null $local_root
+     *  The root directory of the Drupal installation, images of the website are read from it
      */
-    public function __construct($title, $name, $author, $identifier, $language)
+    public function __construct($title, $name, $author, $identifier, $language, $base_url = '', $local_root = null)
     {
+        $this->base_url = (string) $base_url;
+        $this->local_root = $local_root;
         $this->epub = new EPub();
         $this->name = $name;
         $this->epub->setTitle($title);
@@ -54,6 +91,7 @@ class Generator
 
     public function addChapter(Chapter $chapter)
     {
+        $chapter->setSanitizer(new XhtmlSanitizer($this->base_url, [$this, 'addLocalImage']));
         return $this->epub->addChapter(
             htmlspecialchars($chapter->getChapterName()),
             $chapter->getFilename().".html",
@@ -82,6 +120,45 @@ class Generator
             htmlspecialchars($title),
             $filename
         );
+    }
+
+    /**
+     * Adds an image of the website to the epub.
+     *
+     * Images within the articles are referenced relative to the website, e.g. "sites/default/files/image.jpg".
+     * They are read from the file system, so the export does not depend on the website being reachable.
+     *
+     * @param string $src The src of the image
+     * @return string|null The path of the image within the epub, null if it is not available
+     */
+    public function addLocalImage($src)
+    {
+        if (isset($this->local_images[$src])) {
+            return $this->local_images[$src];
+        }
+        $path = rawurldecode((string) parse_url($src, PHP_URL_PATH));
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $root = null !== $this->local_root ? realpath($this->local_root) : false;
+        $file = false !== $root ? realpath($root . '/' . ltrim($path, '/')) : false;
+
+        // only image files within the Drupal installation
+        if (false === $file
+            || !isset(self::IMAGE_TYPES[$extension])
+            || 0 !== strpos($file, $root . DIRECTORY_SEPARATOR)
+            || !is_file($file)
+        ) {
+            return $this->local_images[$src] = null;
+        }
+
+        $id = 'local-' . md5($file);
+        $internal_path = 'images/' . $id . '.' . $extension;
+        // the same file may be referenced with different sources, e.g. with or without a leading slash
+        if (!in_array($internal_path, $this->local_images, true)
+            && false === $this->epub->addLargeFile($internal_path, $id, $file, self::IMAGE_TYPES[$extension])
+        ) {
+            return $this->local_images[$src] = null;
+        }
+        return $this->local_images[$src] = $internal_path;
     }
 
     public function addToc()

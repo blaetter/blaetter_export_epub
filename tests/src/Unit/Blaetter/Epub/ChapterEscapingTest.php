@@ -74,4 +74,31 @@ class ChapterEscapingTest extends UnitTestCase
 
         $this->assertStringContainsString('Titelbild Mai &amp; Juni &lt;2026&gt;</p>', $content);
     }
+
+    public static function imageCreditProvider(): array
+    {
+        return [
+            'plain text' => ['Tim Reckmann (CC BY 2.0)', 'Tim Reckmann (CC BY 2.0)'],
+            'link' => [
+                'Santiago Engelhardt | http://santiagoengelhardt.de',
+                '<span class="link"><a href="http://santiagoengelhardt.de" rel="nofollow">Santiago Engelhardt</a></span>',
+            ],
+            'link without scheme' => [
+                'Tomas Castelazo | www.tomascastelazo.com',
+                '<span class="link"><a href="https://www.tomascastelazo.com" rel="nofollow">Tomas Castelazo</a></span>',
+            ],
+            'quotes in the target' => ['Tim Reckmann | a59.de: "flaggen"', 'Tim Reckmann'],
+            'text as target' => ['IG Metall Bamberg (CC BY-ND 2.0) | IG Metall Bamberg', 'IG Metall Bamberg (CC BY-ND 2.0)'],
+            'html in the text' => ['A & B <script> | https://example.com', '<span class="link"><a href="https://example.com" rel="nofollow">A &amp; B &lt;script&gt;</a></span>'],
+        ];
+    }
+
+    /**
+     * Tests, that the image credits entered by the editors become valid XHTML.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('imageCreditProvider')]
+    public function testImageCreditLine(string $line, string $expected): void
+    {
+        $this->assertSame($expected, $this->createChapter(Chapter::class, [])->formatImageCreditLine($line));
+    }
 }
