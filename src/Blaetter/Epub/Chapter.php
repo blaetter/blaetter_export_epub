@@ -2,6 +2,7 @@
 
 namespace Drupal\blaetter_export_epub\Blaetter\Epub;
 
+use Drupal\Component\Utility\Html;
 use Drupal\file\Entity\File;
 
 class Chapter
@@ -10,7 +11,18 @@ class Chapter
     const TAXONOMY_RUBRIC = 'field_artikeltyp';
     const TAXONOMY_YEAR = 'field_jahr';
     const TAXONOMY_MONTH = 'field_ausgabe';
-    const MODULE_PATH_PREFIX = 'https://www.blaetter.de/modules/contrib/blaetter_export_epub';
+
+    /**
+     * The path of the palm logo within the ePub, relative to the chapters.
+     *
+     * The logo is added from the module by EpubForm, so it is not fetched from the live site during the export.
+     */
+    const PALM_IMAGE = 'images/palme.jpeg';
+
+    /**
+     * The path of the palm logo within the module.
+     */
+    const PALM_IMAGE_SOURCE = 'templates/image/palme.jpeg';
 
     public $author;
 
@@ -96,7 +108,7 @@ class Chapter
             && 'Autorinnen und Autoren' != $this->data->getTitle()
         ) {
             $output .=  '<br /><p class="Ebook-Fliesstext para-style-override-2"><span>' .
-              '<img class="frame-4" src="' . self::MODULE_PATH_PREFIX . '/templates/image/palme.jpeg" ' .
+              '<img class="frame-4" src="' . self::PALM_IMAGE . '" ' .
               'alt="Eine Insel der Vernunft in einem Meer von Unsinn." /></span></p>';
             $edition = $this->buildEdition();
             $pages = $this->buildPages();
@@ -200,19 +212,22 @@ class Chapter
 
     public function getContent()
     {
+        // Title, subtitle, rubric and authors are plain text, so they are escaped. The body is HTML.
         $output = $this->header;
         if (empty($this->rubric) || $this->rubric !== $this->data->rubric) {
             $output .= '<p class="Ebook-Rubriken" id="id-' . md5($this->rubric) . '">' .
-              $this->rubric . '<br /><br /></p>';
+              Html::escape($this->rubric) . '<br /><br /></p>';
         }
-        $output .= '<p class="Ebook-Titel">' . $this->title;
+        $output .= '<p class="Ebook-Titel">' . Html::escape($this->title);
         if (!empty($this->subtitle)) {
-            $output .= '<br /><span class="Light">' . $this->subtitle . '</span>';
+            $output .= '<br /><span class="Light">' . Html::escape($this->subtitle) . '</span>';
         }
+        // Close the paragraph of the title only once, the line break follows it, if there are authors.
         if (!empty($this->author)) {
-            $output .= '<br /><span class="Light">von </span>' . $this->author .'</p>';
+            $output .= '<br /><span class="Light">von </span>' . Html::escape($this->author) . '</p><br />';
+        } else {
+            $output .= '<br /></p>';
         }
-        $output .= '<br /></p>';
         if (!empty($this->image)) {
             $output .= '<div class="Foto-Ebook frame-3">' .
               '<img class="frame-2" src="' . $this->image . '" alt="" /><br /></div>';
@@ -333,6 +348,9 @@ class Chapter
                         $parts = explode(' ', $field_value->getName());
                         $last_name = array_pop($parts);
                     }
+                    // The key is used for sorting the authors, the term id keeps authors with the same last name or
+                    // sort value apart, while the same author of several articles is still listed only once.
+                    $last_name .= "\0" . $field_value->id();
 
                     // get the bio notice content depending on the availability of the short bio notice or the full
                     // bio notice.
@@ -352,7 +370,7 @@ class Chapter
                         // get the author name and bio notice, remove the author name if it is also provided within the
                         // bio notice
                         $output[$last_name] = '<span class="char-style-override-15">' .
-                          $field_value->getName() . '</span>' . str_replace(
+                          Html::escape($field_value->getName()) . '</span>' . str_replace(
                               $field_value->getName() . ',',
                               '',
                               $bio_notice

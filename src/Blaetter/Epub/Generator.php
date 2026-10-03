@@ -77,8 +77,9 @@ class Generator
 
     public function addChapterWrapper($title, $filename)
     {
+        // The chapter names are not escaped by PHPePub, see addChapter().
         return $this->epub->addChapter(
-            $title,
+            htmlspecialchars($title),
             $filename
         );
     }

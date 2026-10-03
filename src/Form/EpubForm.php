@@ -2,6 +2,7 @@
 
 namespace Drupal\blaetter_export_epub\Form;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\blaetter_export_epub\Blaetter\Epub\Chapter;
@@ -42,7 +43,7 @@ class EpubForm extends FormBase
             ->condition('type', 'ausgabe')
             ->sort('nid', 'DESC')
             ->execute();
-        $nodes =  \Drupal\node\Entity\Node::loadMultiple($nids);
+        $nodes = Node::loadMultiple($nids);
 
         $options = array();
         foreach ($nodes as $node) {
@@ -63,6 +64,7 @@ class EpubForm extends FormBase
         $form['basics']['edition'] = [
             '#title'            => $this->t('edition'),
             '#type'             => 'select',
+            '#required'         => true,
             '#options'          => $options,
         ];
 
@@ -121,19 +123,21 @@ class EpubForm extends FormBase
      */
     public function validateForm(array &$form, FormStateInterface $form_state)
     {
-        $edition = \Drupal\node\Entity\Node::load($form_state->getValue('edition'));
-        if ($edition && 'ausgabe' != $edition->getType()) {
+        $edition = $form_state->getValue('edition')
+            ? Node::load($form_state->getValue('edition'))
+            : null;
+        if (!$edition instanceof Node) {
+            $form_state->setErrorByName(
+                'edition',
+                $this->t('The selected edition could not be found.')
+            );
+        } elseif ('ausgabe' != $edition->getType()) {
             $form_state->setErrorByName(
                 'edition',
                 $this->t('Something is wrong with the selected node: Its no edition.')
             );
         }
-        if (null === ($form_state->getValue('export'))
-            || !in_array(
-                $form_state->getValue('export'),
-                ['epub', 'mobi']
-            )
-        ) {
+        if ('epub' !== $form_state->getValue('export')) {
             $form_state->setErrorByName(
                 'export',
                 $this->t('Something is wrong with the export action.')
@@ -154,13 +158,13 @@ class EpubForm extends FormBase
     public function submitForm(array &$form, FormStateInterface $form_state)
     {
         // Get the Edition from the form state value.
-        $edition = \Drupal\node\Entity\Node::load($form_state->getValue('edition'));
+        $edition = Node::load($form_state->getValue('edition'));
 
-        // Get the export type, e.g. epub or mobi
+        // Get the export type, since September 2022 only epub is supported.
         $export_type = $form_state->getValue('export');
 
-        // // prepate an array for all the authors of this edition
-        // // we need that later for the author overview page.
+        // prepare an array for all the authors of this edition
+        // we need that later for the author overview page.
         $authors = [];
 
         // Create an instance of the PHPEpub class. Its wrapped with a custom class to
@@ -202,7 +206,7 @@ class EpubForm extends FormBase
         // and add the cover to the epub
         $cover = new Cover(
             $edition,
-            str_replace('___TITLE___', $edition->getTitle(), $header_raw),
+            str_replace('___TITLE___', Html::escape($edition->getTitle()), $header_raw),
             $footer_raw
         );
         $cover->setExportType($export_type);
@@ -216,10 +220,10 @@ class EpubForm extends FormBase
 
         // Get all book pages in the correct order (e.g. weight)
         // Books and its contents are managed via Drupal
-        $book_manager = $date = \Drupal::service('book.manager');
+        $book_manager = \Drupal::service('book.manager');
 
         $outline = $book_manager->getTableOfContents($edition->id(), 2);
-        $nodes = \Drupal\node\Entity\Node::loadMultiple(array_keys($outline));
+        $nodes = Node::loadMultiple(array_keys($outline));
 
         // Loop through all aricles for the current edition, prepare the nodes and
         // create the epub chapters.
@@ -239,7 +243,7 @@ class EpubForm extends FormBase
                 $node,
                 str_replace(
                     '___TITLE___',
-                    $node->getTitle(),
+                    Html::escape($node->getTitle()),
                     $header_raw
                 ),
                 $footer_raw
@@ -290,7 +294,7 @@ class EpubForm extends FormBase
         $authors_node->rubric = 'Extras';
         $chapter = new Chapter(
             $authors_node,
-            str_replace('___TITLE___', $authors_node->getTitle(), $header_raw),
+            str_replace('___TITLE___', Html::escape($authors_node->getTitle()), $header_raw),
             $footer_raw
         );
         $epub->addChapter($chapter);
@@ -330,10 +334,18 @@ class EpubForm extends FormBase
         $imprint_node->rubric = 'Extras';
         $chapter = new Chapter(
             $imprint_node,
-            str_replace('___TITLE___', $imprint_node->getTitle(), $header_raw),
+            str_replace('___TITLE___', Html::escape($imprint_node->getTitle()), $header_raw),
             $footer_raw
         );
         $epub->addChapter($chapter);
+
+        // add the palm logo below the articles from the module, so it is not fetched from the live site.
+        $epub->addLargeFile(
+            Chapter::PALM_IMAGE,
+            'palme',
+            $module_base_path . '/' . Chapter::PALM_IMAGE_SOURCE,
+            'image/jpeg'
+        );
 
         // add some fonts to the archive as they're not added automatically for
         // whatever reason.
@@ -376,7 +388,7 @@ class EpubForm extends FormBase
             'font/opentype'
         );
 
-        // // create the epub and deliver it to the admin user.
+        // create the epub and deliver it to the admin user.
         $epub->createEpub();
     }
 }
