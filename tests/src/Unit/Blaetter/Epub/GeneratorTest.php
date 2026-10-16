@@ -3,6 +3,7 @@
 namespace Drupal\Tests\blaetter_export_epub\Unit\Blaetter\Epub;
 
 use Drupal\blaetter_export_epub\Blaetter\Epub\Chapter;
+use Drupal\blaetter_export_epub\Blaetter\Epub\Cover;
 use Drupal\blaetter_export_epub\Blaetter\Epub\Generator;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -101,5 +102,83 @@ class GeneratorTest extends UnitTestCase
         $this->assertStringContainsString('<img src="images/local-', $content);
         $this->assertStringNotContainsString('sites/default/files', $content);
         $this->assertStringNotContainsString('align=', $content);
+    }
+
+    /**
+     * Tests, that images of a public files directory outside the Drupal root are added only when it is allowed.
+     */
+    public function testAllowedRoots(): void
+    {
+        $public = $this->drupal_root . '-public';
+        mkdir($public);
+        copy($this->drupal_root . '/sites/default/files/downloads/caracas.jpg', $public . '/linked.jpg');
+        symlink($public, $this->drupal_root . '/sites/default/files/linked');
+        try {
+            $this->assertNull($this->createGenerator()->addLocalImage('sites/default/files/linked/linked.jpg'));
+
+            $generator = new Generator('Dezember 2018', 28694, 'Blätter', 'https://www.blaetter.de/node/28694', 'de', 'https://www.blaetter.de', $this->drupal_root, [$public]);
+            $this->assertSame(
+                'images/local-' . md5(realpath($public . '/linked.jpg')) . '.jpg',
+                $generator->addLocalImage('sites/default/files/linked/linked.jpg')
+            );
+            $this->assertNull($generator->addImageFile(dirname($this->drupal_root) . '/blaetter-epub-outside.jpg'));
+        } finally {
+            exec('rm -rf ' . escapeshellarg($public));
+        }
+    }
+
+    /**
+     * Tests, that the cover image is read from the file system instead of the website.
+     */
+    public function testCoverUsesImageFile(): void
+    {
+        $cover = $this->createChapter(Cover::class, $this->drupal_root . '/sites/default/files/downloads/caracas.jpg');
+        $generator = $this->createGenerator();
+
+        $generator->addCover($cover);
+
+        $this->assertArrayHasKey('CoverPage.xhtml', $generator->epub->getFileList());
+        $content = $cover->getContent();
+        $this->assertStringContainsString('<img class="frame-1" src="images/local-', $content);
+        $this->assertStringNotContainsString('stage.blaetter.de', $content);
+    }
+
+    /**
+     * Tests, that the primary picture of an article is read from the file system and left out when it is missing.
+     */
+    public function testChapterUsesImageFile(): void
+    {
+        $chapter = $this->createChapter(Chapter::class, $this->drupal_root . '/sites/default/files/downloads/caracas.jpg');
+        $this->createGenerator()->addChapter($chapter);
+        $this->assertStringContainsString('<img class="frame-2" src="images/local-', $chapter->getContent());
+
+        $missing = $this->createChapter(Chapter::class, '');
+        $this->createGenerator()->addChapter($missing);
+        $this->assertStringNotContainsString('frame-2', $missing->getContent());
+        $this->assertStringNotContainsString('stage.blaetter.de', $missing->getContent());
+    }
+
+    /**
+     * Creates a chapter or cover, whose primary picture has a URL that can not be fetched.
+     *
+     * @param string $class The class of the chapter
+     * @param string $image_file The path of the primary picture
+     */
+    private function createChapter(string $class, string $image_file): Chapter
+    {
+        $chapter = (new \ReflectionClass($class))->newInstanceWithoutConstructor();
+        foreach ([
+            'header' => file_get_contents(dirname(__DIR__, 5) . '/templates/head.tmpl'),
+            'footer' => file_get_contents(dirname(__DIR__, 5) . '/templates/foot.tmpl'),
+            'title' => 'Dezember 2018',
+            'subtitle' => '', 'rubric' => 'Analysen und Alternativen', 'author' => '',
+            'image' => 'https://stage.blaetter.de/sites/default/files/downloads/caracas.jpg',
+            'image_file' => $image_file,
+            'filename' => '28694', 'data' => (object) ['rubric' => 'Analysen und Alternativen'],
+            'content' => '<p>Text</p>',
+        ] as $property => $value) {
+            $chapter->{$property} = $value;
+        }
+        return $chapter;
     }
 }

@@ -184,7 +184,9 @@ class EpubForm extends FormBase
             "de",
             // links and images relative to the website
             \Drupal::request()->getSchemeAndHttpHost(),
-            \Drupal::root()
+            \Drupal::root(),
+            // the public files may be a symlink to a directory outside the Drupal installation
+            array_filter([\Drupal::service('file_system')->realpath('public://')])
         );
 
         // get the module base path

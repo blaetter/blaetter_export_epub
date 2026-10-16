@@ -38,6 +38,13 @@ class Chapter
 
     public $image;
 
+    /**
+     * The path of the primary picture in the file system, empty if there is none.
+     *
+     * @var string
+     */
+    public $image_file = '';
+
     public $rubric;
 
     public $subtitle;
@@ -60,6 +67,7 @@ class Chapter
         $this->title        = $this->data->getTitle();
         $this->subtitle     = $this->setSubtitle();
         $this->image        = $this->setImage();
+        $this->image_file   = $this->setImageFile();
         $this->header       = $header;
         $this->content      = $this->data->get('body')->value;
         $this->rubric       = $this->buildRubric();
@@ -112,6 +120,24 @@ class Chapter
 
             return \Drupal::service('file_url_generator')
               ->generateAbsoluteString($this->data->get('field_primary_picture')->entity->getFileUri());
+        }
+        return '';
+    }
+
+    /**
+     * Returns the path of the primary picture in the file system, so it can be added to the epub without fetching it
+     * from the website.
+     *
+     * @return string
+     */
+    public function setImageFile()
+    {
+        if ($this->data->hasField('field_primary_picture')
+            && $this->data->get('field_primary_picture')->entity instanceof File
+        ) {
+            $file = \Drupal::service('file_system')
+              ->realpath($this->data->get('field_primary_picture')->entity->getFileUri());
+            return false !== $file ? (string) $file : '';
         }
         return '';
     }

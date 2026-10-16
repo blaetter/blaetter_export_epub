@@ -20,6 +20,7 @@ Sections per version: Features, Security, Bugs, Removed, Maintenance (omit empty
 - The pepgen salt is no longer shown in the settings form and, when set in `settings.php`, no longer ends up in the config export
 
 ### Bugs
+- The cover and the lead images of the articles were missing when the website could not be reached from the server itself (e.g. on the stage server behind a password): they are read from the file system instead of being fetched via their URL; images in a public files directory outside the Drupal installation (symlink) are embedded as well
 - Export and settings were only accessible to administrators (permissions that did not exist)
 - The drush command `bl-watermark` returned a wrong token (Drush instead of Drupal config, wrong date)
 - Failed or incomplete downloads from pepgen were delivered as empty or broken files

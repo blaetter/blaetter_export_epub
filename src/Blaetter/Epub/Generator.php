@@ -38,6 +38,13 @@ class Generator
     private $local_root;
 
     /**
+     * Further directories images may be read from, e.g. the public files directory when it is a symlink.
+     *
+     * @var string[]
+     */
+    private $allowed_roots = [];
+
+    /**
      * The images of the website, that were added to the epub, keyed by their source.
      *
      * @var array
@@ -71,11 +78,23 @@ class Generator
      *  The scheme and host of the website, used for links relative to the website
      * @param string|null $local_root
      *  The root directory of the Drupal installation, images of the website are read from it
+     * @param string[] $allowed_roots
+     *  Further directories images may be read from, e.g. the public files directory, which may be a symlink to a
+     *  directory outside the Drupal installation
      */
-    public function __construct($title, $name, $author, $identifier, $language, $base_url = '', $local_root = null)
-    {
+    public function __construct(
+        $title,
+        $name,
+        $author,
+        $identifier,
+        $language,
+        $base_url = '',
+        $local_root = null,
+        array $allowed_roots = []
+    ) {
         $this->base_url = (string) $base_url;
         $this->local_root = $local_root;
+        $this->allowed_roots = $allowed_roots;
         $this->epub = new EPub();
         $this->name = $name;
         $this->epub->setTitle($title);
@@ -92,6 +111,7 @@ class Generator
     public function addChapter(Chapter $chapter)
     {
         $chapter->setSanitizer(new XhtmlSanitizer($this->base_url, [$this, 'addLocalImage']));
+        $this->useImageFile($chapter);
         return $this->epub->addChapter(
             htmlspecialchars($chapter->getChapterName()),
             $chapter->getFilename().".html",
@@ -103,7 +123,12 @@ class Generator
 
     public function addCover(Cover $cover)
     {
-        $this->epub->setCoverImage($cover->getImage());
+        // The cover image is read from the file system: fetching it from the website fails, when the website is not
+        // reachable from the server, e.g. behind a password like the stage server.
+        if (!empty($cover->image_file)) {
+            $this->epub->setCoverImage($cover->image_file);
+        }
+        $this->useImageFile($cover);
         return $this->epub->addChapter(
             'Titelbild',
             $cover->getFilename().".html",
@@ -133,32 +158,74 @@ class Generator
      */
     public function addLocalImage($src)
     {
-        if (isset($this->local_images[$src])) {
+        if (array_key_exists($src, $this->local_images)) {
             return $this->local_images[$src];
         }
         $path = rawurldecode((string) parse_url($src, PHP_URL_PATH));
-        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
         $root = null !== $this->local_root ? realpath($this->local_root) : false;
-        $file = false !== $root ? realpath($root . '/' . ltrim($path, '/')) : false;
+        $file = false !== $root && '' !== $path ? realpath($root . '/' . ltrim($path, '/')) : false;
 
-        // only image files within the Drupal installation
-        if (false === $file
-            || !isset(self::IMAGE_TYPES[$extension])
-            || 0 !== strpos($file, $root . DIRECTORY_SEPARATOR)
-            || !is_file($file)
-        ) {
-            return $this->local_images[$src] = null;
+        return $this->local_images[$src] = false !== $file ? $this->addImageFile($file) : null;
+    }
+
+    /**
+     * Adds an image file to the epub.
+     *
+     * Only image files within the Drupal installation or one of the allowed roots are added.
+     *
+     * @param string $file The path of the image in the file system
+     * @return string|null The path of the image within the epub, null if it is not available
+     */
+    public function addImageFile($file)
+    {
+        $file = '' !== (string) $file ? realpath($file) : false;
+        if (false === $file || !is_file($file) || !$this->isAllowedFile($file)) {
+            return null;
+        }
+        $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if (!isset(self::IMAGE_TYPES[$extension])) {
+            return null;
         }
 
         $id = 'local-' . md5($file);
         $internal_path = 'images/' . $id . '.' . $extension;
-        // the same file may be referenced with different sources, e.g. with or without a leading slash
+        // the same file may be referenced several times, e.g. with or without a leading slash
         if (!in_array($internal_path, $this->local_images, true)
             && false === $this->epub->addLargeFile($internal_path, $id, $file, self::IMAGE_TYPES[$extension])
         ) {
-            return $this->local_images[$src] = null;
+            return null;
         }
-        return $this->local_images[$src] = $internal_path;
+        return $this->local_images[$file] = $internal_path;
+    }
+
+    /**
+     * Checks, that a file is within the Drupal installation or one of the allowed roots.
+     *
+     * @param string $file The real path of the file
+     * @return bool
+     */
+    private function isAllowedFile($file)
+    {
+        foreach (array_merge([$this->local_root], $this->allowed_roots) as $root) {
+            $root = null !== $root ? realpath($root) : false;
+            if (false !== $root && 0 === strpos($file, $root . DIRECTORY_SEPARATOR)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Uses the image file of a chapter within the epub instead of its URL.
+     *
+     * Images referenced by URL would be fetched from the website by PHPePub, which fails when the website is not
+     * reachable from the server. Without an image file, the chapter has no image.
+     *
+     * @param Chapter $chapter
+     */
+    private function useImageFile(Chapter $chapter)
+    {
+        $chapter->image = (string) $this->addImageFile((string) $chapter->image_file);
     }
 
     public function addToc()
