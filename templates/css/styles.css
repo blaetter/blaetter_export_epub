@@ -75,14 +75,14 @@ blockquote {
     margin:             1em 0;
     font-size:          1.6em;
     line-height:        2em;
-    &:before {
-        color:              #777;
-        content:         "»";
-        display:         inline-block;
-        margin-right:    0.4em;
-        font-size:       1.2em;
-        line-height:     0.75em;
-    }
+}
+blockquote:before {
+    color:           #777;
+    content:         "»";
+    display:         inline-block;
+    margin-right:    0.4em;
+    font-size:       1.2em;
+    line-height:     0.75em;
 }
 blockquote p.Ebook-Fliesstext {
     color:       #777;

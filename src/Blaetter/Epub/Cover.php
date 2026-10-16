@@ -3,6 +3,7 @@
 namespace Drupal\blaetter_export_epub\Blaetter\Epub;
 
 use Drupal\blaetter_export_epub\Blaetter\Epub\Chapter;
+use Drupal\Component\Utility\Html;
 
 class Cover extends Chapter
 {
@@ -24,7 +25,7 @@ class Cover extends Chapter
     {
         $output = $this->header;
         $output .= '<p id="toc_marker-1" class="Ebook-Rubriken para-style-override-1">' .
-          'Titelbild ' . $this->title . '</p>';
+          'Titelbild ' . Html::escape($this->title) . '</p>';
         if (!empty($this->image)) {
             $output .= '<p class="Ebook-Titel2 para-style-override-1">' .
               '<span><img class="frame-1" src="' . $this->image . '" alt="Titelbild der Ausgabe" /></span></p>';

@@ -5,4 +5,12 @@ package: Blätter
 type: module
 core_version_requirement: ^10 || ^11
 
+dependencies:
+  - drupal:book
+  - drupal:file
+  - drupal:node
+  - drupal:taxonomy
+  - drupal:user
+  - nodeshop:nodeshop
+
 configure: blaetter_export_epub.settings

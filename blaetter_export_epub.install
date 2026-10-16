@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Blätter Export Epub module.
+ */
+
+/**
+ * Remove the settings of the mobi download, it is not offered since September 2022.
+ */
+function blaetter_export_epub_update_10001()
+{
+    \Drupal::configFactory()->getEditable('blaetter_export_epub.settings')
+        ->clear('mobi')
+        ->save();
+}

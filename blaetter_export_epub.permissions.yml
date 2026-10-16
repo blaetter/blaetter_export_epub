@@ -1,0 +1,9 @@
+export epub:
+  title: 'Export issues as ePub'
+  description: 'Allows to generate the ePub of an issue on the export page.'
+  restrict access: true
+
+administer blaetter export epub:
+  title: 'Administer the ePub export'
+  description: 'Allows to change the settings of the ePub export, e.g. the pepgen salt.'
+  restrict access: true

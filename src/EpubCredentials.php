@@ -2,8 +2,8 @@
 
 namespace Drupal\blaetter_export_epub;
 
-use Drupal\node\Entity\Node;
-use Drupal\user\Entity\User;
+use Drupal\node\NodeInterface;
+use Drupal\user\UserInterface;
 
 /**
  * Class EpubCredentials.
@@ -29,7 +29,13 @@ class EpubCredentials
 
     private $watermark;
 
-    public function __construct(Node $node, User $user, $salt, $timestamp = 'today')
+    /**
+     * @param NodeInterface $node The node, the ePub is generated for.
+     * @param UserInterface $user The user, the ePub is generated for.
+     * @param string $salt The salt of the pepgen installation.
+     * @param string $timestamp The date of the download as string for strtotime(), e.g. "today", not a timestamp.
+     */
+    public function __construct(NodeInterface $node, UserInterface $user, $salt, $timestamp = 'today')
     {
         $this->node_id = $node->id();
         $this->first_name = $user->get('field_first_name')->value;
