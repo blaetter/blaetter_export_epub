@@ -4,7 +4,7 @@ All notable changes to this module, grouped by topic. New entries go into the "U
 
 Sections per version: Features, Security, Bugs, Removed, Maintenance (omit empty sections).
 
-## Unreleased (branch `20261003_refactor`)
+## Unreleased
 
 ### Features
 - Exported ePubs comply with the EPUB 2 specification (checked with epubcheck)
