@@ -12,6 +12,14 @@ msgctxt "Blaetter issue"
 msgid "Issue"
 msgstr "Ausgabe"
 
+msgctxt "Blaetter issue"
+msgid "Published"
+msgstr "Veröffentlicht"
+
+msgctxt "Blaetter issue"
+msgid "Unpublished"
+msgstr "Nicht veröffentlicht"
+
 msgid "Here the issues can be downloaded bundled as ePub or copied directly into the download directory for the users. To do so, simply select one or more issues and choose the action \"@action\" at the end of the table."
 msgstr "Hier können die Ausgaben gebündelt als ePub heruntergeladen oder direkt in den Downloadordner für die Nutzenden kopiert werden. Dazu einfach ein oder mehrere Ausgaben markieren und am Ende der Tabelle die Aktion \"@action\" auswählen."
 

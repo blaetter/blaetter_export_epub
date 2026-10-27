@@ -14,7 +14,7 @@ You are, however, free to fork or use this module for your own purposes.
 
 ## Export and pepgen
 
-The export page (`/admin/content/epub`) lists the issues, newest first and 20 per page. The selected issues are exported as ePub with the placeholder for the watermark of pepgen in the imprint, and either downloaded (several as zip archive) or, when the original directory of pepgen is set in the settings (`/admin/settings/blaetter_export_epub`, `pepgen.original_dir`), handed over to pepgen directly; then this is the default action. Each row also offers the download of its ePub (`/admin/content/epub/{node}/download`). The hand over runs as batch, one issue per request:
+The export page (`/admin/content/epub`) lists the issues, newest first and 20 per page, unpublished ones too (with their status), so the ePub of an issue can be prepared before it is published. The selected issues are exported as ePub with the placeholder for the watermark of pepgen in the imprint, and either downloaded (several as zip archive) or, when the original directory of pepgen is set in the settings (`/admin/settings/blaetter_export_epub`, `pepgen.original_dir`), handed over to pepgen directly; then this is the default action. Each row also offers the download of its ePub (`/admin/content/epub/{node}/download`). The hand over runs as batch, one issue per request:
 
 - The ePub is unzipped into `<original directory>/<node id>.epub`, the format pepgen reads its originals in.
 - It is unzipped into a hidden directory next to it first and swapped in afterwards, so pepgen never reads a half written ePub. The previous version stays as `.<node id>.epub.previous` (only the last one).

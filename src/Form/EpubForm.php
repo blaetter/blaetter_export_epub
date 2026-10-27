@@ -138,15 +138,18 @@ class EpubForm extends FormBase implements TrustedCallbackInterface
         $directory = $this->getPepgenDirectory();
         $storage = $this->entityTypeManager->getStorage('node');
 
+        // unpublished issues too: their ePub is prepared before they are published
         $nids = $storage->getQuery()
             ->accessCheck(true)
-            ->condition('status', 1)
             ->condition('type', 'ausgabe')
             ->sort('nid', 'DESC')
             ->pager(self::ISSUES_PER_PAGE)
             ->execute();
 
-        $header = ['title' => $this->t('Issue', [], ['context' => 'Blaetter issue'])];
+        $header = [
+            'title'     => $this->t('Issue', [], ['context' => 'Blaetter issue']),
+            'status'    => $this->t('Status'),
+        ];
         if ('' !== $directory) {
             $header['pepgen'] = $this->t('At pepgen since');
         }
@@ -154,7 +157,12 @@ class EpubForm extends FormBase implements TrustedCallbackInterface
 
         $options = [];
         foreach ($storage->loadMultiple($nids) as $node) {
-            $row = ['title' => ['data' => $node->toLink()->toRenderable()]];
+            $row = [
+                'title'     => ['data' => $node->toLink()->toRenderable()],
+                'status'    => $node->isPublished()
+                    ? $this->t('Published', [], ['context' => 'Blaetter issue'])
+                    : $this->t('Unpublished', [], ['context' => 'Blaetter issue']),
+            ];
             if ('' !== $directory) {
                 $mimetype = $directory . '/' . $node->id() . '.epub/mimetype';
                 $row['pepgen'] = is_file($mimetype) ? $this->dateFormatter->format(filemtime($mimetype), 'short') : '–';
