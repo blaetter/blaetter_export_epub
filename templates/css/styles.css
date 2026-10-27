@@ -802,3 +802,10 @@ img.frame-4 {
     height:62px;
     width:62px;
 }
+
+/* The footnotes of an article, separated from the text (built by XhtmlSanitizer). */
+.Ebook-Fussnoten {
+    margin-top: 1.5em;
+    padding-top: 0.75em;
+    border-top: 1px solid #999999;
+}

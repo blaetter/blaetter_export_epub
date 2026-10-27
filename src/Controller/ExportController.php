@@ -47,7 +47,10 @@ class ExportController extends ControllerBase
         if ('ausgabe' !== $node->getType()) {
             throw new NotFoundHttpException();
         }
-        $exporter = new IssueExporter($this->pathResolver->getPath('module', 'blaetter_export_epub'));
+        $exporter = new IssueExporter(
+            $this->pathResolver->getPath('module', 'blaetter_export_epub'),
+            (string) $this->config('blaetter_export_epub.settings')->get('pepgen.original_dir')
+        );
         return IssueExporter::downloadResponse($exporter->buildFiles([$node]));
     }
 }

@@ -341,7 +341,10 @@ class EpubForm extends FormBase implements TrustedCallbackInterface
 
         // the ePubs are built within this request, one after the other
         Environment::setTimeLimit(300);
-        $exporter = new IssueExporter($this->pathResolver->getPath('module', 'blaetter_export_epub'));
+        $exporter = new IssueExporter(
+            $this->pathResolver->getPath('module', 'blaetter_export_epub'),
+            $this->getPepgenDirectory()
+        );
         $editions = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
         try {
             $response = IssueExporter::downloadResponse($exporter->buildFiles($editions));
@@ -375,7 +378,8 @@ class EpubForm extends FormBase implements TrustedCallbackInterface
             return;
         }
         $exporter = new IssueExporter(
-            \Drupal::service('extension.path.resolver')->getPath('module', 'blaetter_export_epub')
+            \Drupal::service('extension.path.resolver')->getPath('module', 'blaetter_export_epub'),
+            $directory
         );
         try {
             (new PepgenPublisher($directory, \Drupal::lock()))->publish($exporter->build($edition)->getBookData(), $nid);

@@ -97,6 +97,8 @@ class XhtmlSanitizer
         $body = $document->getElementsByTagName('body')->item(0);
 
         $this->cleanNode($body);
+        $this->collectFootnotes($document);
+        $this->collapseNestedSup($document);
         $this->cleanIds($document);
         $this->cleanFragmentLinks($document);
 
@@ -259,6 +261,88 @@ class XhtmlSanitizer
         }
         if (!$image->hasAttribute('alt')) {
             $image->setAttribute('alt', '');
+        }
+    }
+
+    /**
+     * Moves the footnotes of an article into one block "Ebook-Fussnoten", one after the other.
+     *
+     * Word (div#ftn1, anchors #_ftn1) and LibreOffice (div#sdfootnote1) footnotes arrive with unclosed divs, so each
+     * footnote is nested within the previous one. The block replaces this nesting and gets its separator from the
+     * styles; empty paragraphs right before it, which only served as spacing, are removed. Ids and links stay.
+     */
+    private function collectFootnotes(\DOMDocument $document)
+    {
+        $xpath = new \DOMXPath($document);
+        $footnotes = [];
+        foreach ($xpath->query('//body//div[@id]') as $div) {
+            if (preg_match('/^(ftn|sdfootnote)\d+$/', $div->getAttribute('id'))) {
+                $footnotes[] = $div;
+            }
+        }
+        if (!$footnotes) {
+            // Word footnotes without their div: the paragraph of the anchor is the footnote
+            foreach ($xpath->query('//body//a[starts-with(@id, "_ftn")]') as $anchor) {
+                $block = $anchor->parentNode;
+                while ($block && !in_array(strtolower($block->nodeName), ['p', 'div', 'body'], true)) {
+                    $block = $block->parentNode;
+                }
+                if (preg_match('/^_ftn\d+$/', $anchor->getAttribute('id')) && $block
+                    && 'body' !== strtolower($block->nodeName) && !in_array($block, $footnotes, true)
+                ) {
+                    $footnotes[] = $block;
+                }
+            }
+        }
+        if (!$footnotes) {
+            return;
+        }
+
+        $block = $document->createElement('div');
+        $block->setAttribute('class', 'Ebook-Fussnoten');
+        $footnotes[0]->parentNode->insertBefore($block, $footnotes[0]);
+        // in document order: appending a footnote moves it out of the one it was nested in
+        foreach ($footnotes as $footnote) {
+            $block->appendChild($footnote);
+        }
+
+        while (($previous = $block->previousSibling) && $this->isEmptyBlock($previous)) {
+            $previous->parentNode->removeChild($previous);
+        }
+    }
+
+    /**
+     * Whether a node is whitespace or an empty paragraph, which only served as spacing.
+     */
+    private function isEmptyBlock(\DOMNode $node)
+    {
+        if (XML_TEXT_NODE === $node->nodeType) {
+            return '' === trim($node->textContent, " \t\n\r\0\x0B\u{A0}");
+        }
+        return XML_ELEMENT_NODE === $node->nodeType && 'p' === strtolower($node->nodeName)
+            && '' === trim($node->textContent, " \t\n\r\0\x0B\u{A0}")
+            && 0 === $node->getElementsByTagName('img')->length;
+    }
+
+    /**
+     * Collapses superscripts within superscripts (<sup><sup>[1]</sup></sup>, from Word footnotes) into one.
+     */
+    private function collapseNestedSup(\DOMDocument $document)
+    {
+        $xpath = new \DOMXPath($document);
+        foreach (iterator_to_array($xpath->query('//body//sup[sup]')) as $outer) {
+            $elements = 0;
+            foreach ($outer->childNodes as $child) {
+                if (XML_ELEMENT_NODE === $child->nodeType) {
+                    $elements++;
+                } elseif ('' !== trim($child->textContent)) {
+                    // text next to the inner superscript: keep both
+                    continue 2;
+                }
+            }
+            if (1 === $elements) {
+                $this->unwrap($outer);
+            }
         }
     }
 

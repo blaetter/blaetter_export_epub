@@ -45,6 +45,20 @@ class IssueExporter
     private $module_path;
 
     /**
+     * The original directory of pepgen, to take the imprint of an ePub that exists already; empty if not set.
+     *
+     * @var string
+     */
+    private $pepgen_directory;
+
+    /**
+     * Whether the last export took the imprint of the existing ePub of the issue.
+     *
+     * @var bool
+     */
+    private $previous_imprint = false;
+
+    /**
      * The fonts of the last export that were not found in templates/font/.
      *
      * @var string[]
@@ -54,10 +68,13 @@ class IssueExporter
     /**
      * @param string $module_path
      *   The path of the module, relative to the Drupal root or absolute.
+     * @param string $pepgen_directory
+     *   The original directory of pepgen: an issue that has an ePub there keeps the imprint of that ePub.
      */
-    public function __construct(string $module_path)
+    public function __construct(string $module_path, string $pepgen_directory = '')
     {
         $this->module_path = $module_path;
+        $this->pepgen_directory = rtrim($pepgen_directory, '/');
     }
 
     /**
@@ -216,14 +233,17 @@ class IssueExporter
         $epub->addChapter($chapter);
 
         // create a fake node object to use it within the Chapter class
-        // for the imprint, with the placeholder for the watermark of pepgen
+        // for the imprint, with the placeholder for the watermark of pepgen. An issue that has an ePub at pepgen
+        // already keeps its imprint (the imprint changes over the years), new issues get the current one.
+        $imprint = $this->getPreviousImprint($edition);
+        $this->previous_imprint = null !== $imprint;
         $data = [];
         $data['nid'] = ['x-default' => '999999'];
         $data['title'] = ['x-default' => 'Impressum'];
         $data['body'] = [
             'x-default' => [
                 0 => [
-                    'value' => str_replace(
+                    'value' => $imprint ?? str_replace(
                         '___WATERMARK___',
                         self::IMPRINT_WATERMARK,
                         $imprint_raw
@@ -358,6 +378,89 @@ class IssueExporter
         $response->setContentDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $name);
         $response->deleteFileAfterSend(true);
         return $response;
+    }
+
+    /**
+     * Whether the last export took the imprint of the existing ePub of the issue instead of the current one.
+     */
+    public function usedPreviousImprint()
+    {
+        return $this->previous_imprint;
+    }
+
+    /**
+     * Returns the content of the imprint of the ePub of the issue at pepgen, or null if there is none.
+     */
+    protected function getPreviousImprint(NodeInterface $edition)
+    {
+        if ('' === $this->pepgen_directory) {
+            return null;
+        }
+        $file = $this->pepgen_directory . '/' . $edition->id() . '.epub/OEBPS/999999.html';
+        $xhtml = is_file($file) ? file_get_contents($file) : false;
+        if (false === $xhtml || '' === trim($xhtml)) {
+            return null;
+        }
+        return self::extractImprint($xhtml, self::IMPRINT_WATERMARK);
+    }
+
+    /**
+     * Returns the content of an imprint chapter (999999.html), or null if it has not the known frame.
+     *
+     * The content is what the template of the imprint holds: the frame and the title, which the chapter adds again,
+     * are left out. The placeholder for the watermark gets the current form (with the line break after it); an
+     * imprint without placeholder gets it before the sentence about the rights of use, so the ePub is personalised.
+     *
+     * @param string $xhtml
+     *   The imprint chapter of an ePub.
+     * @param string $watermark
+     *   The placeholder for the watermark.
+     *
+     * @return string|null
+     */
+    public static function extractImprint(string $xhtml, string $watermark)
+    {
+        $document = new \DOMDocument();
+        if (@$document->loadXML($xhtml, LIBXML_NONET)) {
+            $xpath = new \DOMXPath($document);
+            $xpath->registerNamespace('h', 'http://www.w3.org/1999/xhtml');
+            $frame = $xpath->query('//h:div[@class="Einfacher-Textrahmen"]')->item(0);
+        } elseif (preg_match('#<body[^>]*>(.*)</body>#s', $xhtml, $body)) {
+            // exports until 2020 wrote imprints that are no well-formed XML; the chapter cleans the content again
+            $document = Html::load($body[1]);
+            $frame = (new \DOMXPath($document))->query('//div[@class="Einfacher-Textrahmen"]')->item(0);
+        }
+        if (empty($frame)) {
+            return null;
+        }
+        $content = '';
+        $title_skipped = false;
+        foreach ($frame->childNodes as $child) {
+            if (!$title_skipped && XML_ELEMENT_NODE === $child->nodeType) {
+                $title_skipped = true;
+                if ('Ebook-Titel' === $child->getAttribute('class')) {
+                    continue;
+                }
+            }
+            $content .= $document->saveXML($child);
+        }
+        $content = trim(str_replace(' xmlns="http://www.w3.org/1999/xhtml"', '', $content));
+        if ('' === $content) {
+            return null;
+        }
+
+        if (str_contains($content, 'XXXXX')) {
+            // the placeholder of older exports had no line break after it
+            return preg_replace('#<span[^>]*>\s*XXXXX\s*</span>(?!\s*<br)#', $watermark, $content, 1);
+        }
+        $position = strpos($content, 'Mit dem Erwerb des E-Books');
+        if (false !== $position) {
+            $span = strrpos(substr($content, 0, $position), '<span');
+            if (false !== $span) {
+                return substr($content, 0, $span) . $watermark . substr($content, $span);
+            }
+        }
+        return $content . '<p class="Ebook-Impressum">' . $watermark . '</p>';
     }
 
     /**

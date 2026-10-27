@@ -34,6 +34,12 @@ The export page includes unpublished articles of an issue (it runs as the editor
 
 At most 10 issues can be downloaded at once, they are built within one request; the hand over to pepgen runs as batch and has no limit. A lock per issue keeps two hand overs of the same issue from interfering.
 
+## Imprint and footnotes
+
+The imprint comes from `templates/imprint.tmpl` for new issues. An issue that has an ePub in the original directory of pepgen already keeps the imprint of that ePub when it is exported again, so old issues keep their imprint of the time (only the placeholder for the watermark is brought to the current form). Drush reads it from the configured directory also with `--destination`.
+
+Footnotes of Word (`div#ftn1`, anchors `#_ftn1`) and LibreOffice (`div#sdfootnote1`) are collected into one block `div.Ebook-Fussnoten` after the text, styled in `templates/css/styles.css`.
+
 ## Translation
 
 All texts of the user interface are English source strings passed through `t()` (or `TranslatableMarkup`), the content of the ePub itself is German. The German translation is part of the module (`translations/de.po`) and registered in the info file, so `drush locale:check` and `drush locale:update` import it; translations changed by hand in the interface are kept. To import only this file:

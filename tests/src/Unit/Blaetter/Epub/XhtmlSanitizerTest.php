@@ -65,11 +65,11 @@ class XhtmlSanitizerTest extends UnitTestCase
                 '<p><a href="#_ftn2" id="_ftnref2">[2]</a></p>'
                 . '<p><a href="#_ftnref2" id="_ftn2" title=""></a><a href="#_ftnref2" id="_ftn2" title="">[2]</a> Vgl.</p>',
                 '<p><a href="#_ftn2" id="_ftnref2">[2]</a></p>'
-                . '<p><a href="#_ftnref2" id="_ftn2" title=""/><a href="#_ftnref2" title="">[2]</a> Vgl.</p>',
+                . '<div class="Ebook-Fussnoten"><p><a href="#_ftnref2" id="_ftn2" title=""/><a href="#_ftnref2" title="">[2]</a> Vgl.</p></div>',
             ],
             'links to missing footnotes become text' => [
                 '<p><a href="#_ftnref8" id="_ftn8"><sup>[8]</sup></a> Text</p>',
-                '<p><sup>[8]</sup> Text</p>',
+                '<div class="Ebook-Fussnoten"><p><sup>[8]</sup> Text</p></div>',
             ],
             'invalid ids are removed' => ['<p id="1 2">Text</p>', '<p>Text</p>'],
             'links without scheme' => [
@@ -172,5 +172,54 @@ class XhtmlSanitizerTest extends UnitTestCase
     {
         $this->assertSame('', (new XhtmlSanitizer())->sanitize(''));
         $this->assertSame('', (new XhtmlSanitizer())->sanitize(null));
+    }
+
+    /**
+     * Word footnotes nested in each other move into one block after the text; empty spacing paragraphs go.
+     */
+    public function testWordFootnotesAreCollected(): void
+    {
+        $html = '<p>Text<a href="#_ftn1" id="_ftnref1"><sup><sup>[1]</sup></sup></a> und mehr<a href="#_ftn2" id="_ftnref2"><sup><sup>[2]</sup></sup></a>.</p>'
+            . '<p>&nbsp;</p><p> </p>'
+            . '<div id="ftn1"><p><a href="#_ftnref1" id="_ftn1"><sup><sup>[1]</sup></sup></a> Erste Quelle.</p>'
+            . '<div id="ftn2"><p><a href="#_ftnref2" id="_ftn2"><sup><sup>[2]</sup></sup></a> Zweite Quelle.</p>';
+
+        $this->assertSame(
+            '<p>Text<a href="#_ftn1" id="_ftnref1"><sup>[1]</sup></a> und mehr<a href="#_ftn2" id="_ftnref2"><sup>[2]</sup></a>.</p>'
+            . '<div class="Ebook-Fussnoten">'
+            . '<div id="ftn1"><p><a href="#_ftnref1" id="_ftn1"><sup>[1]</sup></a> Erste Quelle.</p></div>'
+            . '<div id="ftn2"><p><a href="#_ftnref2" id="_ftn2"><sup>[2]</sup></a> Zweite Quelle.</p></div>'
+            . '</div>',
+            $this->sanitize($html)
+        );
+    }
+
+    /**
+     * LibreOffice footnotes (sdfootnote) are collected the same way.
+     */
+    public function testLibreOfficeFootnotesAreCollected(): void
+    {
+        $html = '<p>Text<a class="sdfootnoteanc" href="#sdfootnote1sym" id="sdfootnote1anc"><sup>1</sup></a></p>'
+            . '<div id="sdfootnote1"><p><a class="sdfootnotesym" href="#sdfootnote1anc" id="sdfootnote1sym">1</a> Quelle eins.</p>'
+            . '<div id="sdfootnote2"><p>2 Quelle zwei.</p></div></div>';
+
+        $xhtml = $this->sanitize($html);
+        $this->assertStringContainsString(
+            '<div class="Ebook-Fussnoten"><div id="sdfootnote1">'
+            . '<p><a class="sdfootnotesym" href="#sdfootnote1anc" id="sdfootnote1sym">1</a> Quelle eins.</p></div>'
+            . '<div id="sdfootnote2"><p>2 Quelle zwei.</p></div></div>',
+            $xhtml
+        );
+        // the link from the text still finds its footnote
+        $this->assertStringContainsString('href="#sdfootnote1sym" id="sdfootnote1anc"', $xhtml);
+    }
+
+    /**
+     * Without footnotes nothing changes, empty paragraphs elsewhere stay (they may be spacing on purpose).
+     */
+    public function testWithoutFootnotes(): void
+    {
+        $this->assertSame('<p>Eins</p><p> </p><p>Zwei</p>', $this->sanitize('<p>Eins</p><p> </p><p>Zwei</p>'));
+        $this->assertSame('<p>x<sup>2</sup> und <sup><sub>a</sub>b</sup></p>', $this->sanitize('<p>x<sup>2</sup> und <sup><sub>a</sub>b</sup></p>'));
     }
 }

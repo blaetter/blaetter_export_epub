@@ -186,7 +186,11 @@ class EpubCommands extends DrushCommands
             throw new \InvalidArgumentException('No issues given, use node ids or --from.');
         }
 
-        $exporter = new IssueExporter($this->pathResolver->getPath('module', 'blaetter_export_epub'));
+        // the imprint of an existing ePub always comes from pepgen, also when writing into another directory
+        $exporter = new IssueExporter(
+            $this->pathResolver->getPath('module', 'blaetter_export_epub'),
+            (string) $this->configFactory->get('blaetter_export_epub.settings')->get('pepgen.original_dir')
+        );
         $publisher = new PepgenPublisher($directory, $this->lock);
         $failed = [];
         $skipped = [];
@@ -211,7 +215,10 @@ class EpubCommands extends DrushCommands
             }
             try {
                 $path = $publisher->publish($exporter->build($node)->getBookData(), $id);
-                $this->logger()->success($id . ': ' . $node->getTitle() . ' -> ' . $path);
+                $this->logger()->success(
+                    $id . ': ' . $node->getTitle() . ' -> ' . $path
+                    . ($exporter->usedPreviousImprint() ? ' (imprint of the existing ePub)' : ' (current imprint)')
+                );
                 if ($exporter->getMissingFonts()) {
                     $without_fonts[] = $id;
                 }
