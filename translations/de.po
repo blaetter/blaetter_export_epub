@@ -1,0 +1,168 @@
+# German translation of Blätter Export Epub.
+msgid ""
+msgstr ""
+"Project-Id-Version: blaetter_export_epub\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: de\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "Blaetter issue"
+msgid "Issue"
+msgstr "Ausgabe"
+
+msgid "Here the issues can be downloaded bundled as ePub or copied directly into the download directory for the users. To do so, simply select one or more issues and choose the action \"@action\" at the end of the table."
+msgstr "Hier können die Ausgaben gebündelt als ePub heruntergeladen oder direkt in den Downloadordner für die Nutzenden kopiert werden. Dazu einfach ein oder mehrere Ausgaben markieren und am Ende der Tabelle die Aktion \"@action\" auswählen."
+
+msgid "If the action is missing, the destination directory for the export still has to be set <a href=\":settings\">in the settings</a>."
+msgstr "Fehlt die Aktion, muss <a href=\":settings\">in den Einstellungen</a> noch der Zielordner für den Export definiert werden."
+
+msgid "If the action is missing, the destination directory for the export still has to be set in the settings."
+msgstr "Fehlt die Aktion, muss in den Einstellungen noch der Zielordner für den Export definiert werden."
+
+msgid "Alternatively, several issues can also be downloaded as ePub."
+msgstr "Alternativ lassen sich mehrere Ausgaben auch als ePub herunterladen."
+
+msgid "At pepgen since"
+msgstr "Bei pepgen seit"
+
+msgid "No issues found."
+msgstr "Keine Ausgaben gefunden."
+
+msgid "Perform actions on the selected issues"
+msgstr "Aktionen für die ausgewählten Ausgaben ausführen"
+
+msgid "Please select at least one issue."
+msgstr "Bitte mindestens eine Ausgabe auswählen."
+
+msgid "The selected edition could not be found."
+msgstr "Die ausgewählte Ausgabe wurde nicht gefunden."
+
+msgid "Something is wrong with the selected node: Its no edition."
+msgstr "Der ausgewählte Inhalt ist keine Ausgabe."
+
+msgid "The action is not valid."
+msgstr "Die Aktion ist ungültig."
+
+msgid "pepgen: @problem"
+msgstr "pepgen: @problem"
+
+msgid "Handing the ePubs over to pepgen"
+msgstr "ePubs an pepgen übergeben"
+
+msgid "@nid: no issue"
+msgstr "@nid: keine Ausgabe"
+
+msgid "@title: @message"
+msgstr "@title: @message"
+
+msgid "Handing over to pepgen failed: @failure"
+msgstr "Übergabe an pepgen fehlgeschlagen: @failure"
+
+msgid "The hand over was aborted."
+msgstr "Die Übergabe wurde abgebrochen."
+
+msgid "Fonts are missing in templates/font/ of the module, so they are not part of the ePubs of @issues: @fonts"
+msgstr "Schriften fehlen in templates/font/ des Moduls und sind daher nicht in den ePubs von @issues: @fonts"
+
+msgid "Hand over to pepgen"
+msgstr "An pepgen übergeben"
+
+msgid "Download as ePub (several as zip archive)"
+msgstr "Als ePub herunterladen (mehrere als ZIP)"
+
+msgid "Download ePub"
+msgstr "ePub herunterladen"
+
+msgid "Pepgen settings"
+msgstr "Einstellungen für pepgen"
+
+msgid "These are the settings for the pepgen integration."
+msgstr "Die Einstellungen für die Anbindung an pepgen."
+
+msgid "pepgen salt"
+msgstr "pepgen-Salt"
+
+msgid "The salt is set in settings.php and can not be changed here."
+msgstr "Der Salt ist in der settings.php gesetzt und kann hier nicht geändert werden."
+
+msgid "Please enter the salt that is used in the pepgen installation to generate the hashed filename."
+msgstr "Der Salt, mit dem pepgen die verschlüsselten Dateinamen erzeugt."
+
+msgid "A salt is stored. Leave the field empty to keep it."
+msgstr "Ein Salt ist gespeichert. Leer lassen, um ihn zu behalten."
+
+msgid "There is no salt stored yet."
+msgstr "Es ist noch kein Salt gespeichert."
+
+msgid "pepgen base url"
+msgstr "Adresse von pepgen"
+
+msgid "Please enter the url of your pepgen installation <strong>without</strong> the trailing \"/\"."
+msgstr "Die Adresse der pepgen-Installation, <strong>ohne</strong> „/“ am Ende."
+
+msgid "pepgen download url"
+msgstr "Download-Adresse von pepgen"
+
+msgid "Please enter the download url of your pepgen installation <strong>without</strong> the trailing \"/\"."
+msgstr "Die Download-Adresse der pepgen-Installation, <strong>ohne</strong> „/“ am Ende."
+
+msgid "pepgen original directory"
+msgstr "Original-Verzeichnis von pepgen"
+
+msgid "The absolute path of the directory pepgen reads the unzipped original ePubs from (epub_original_dir of pepgen), without the trailing \"/\". When set, the export page can hand the ePubs over to pepgen instead of offering them as download. The web server needs write access. Leave empty to only offer the download."
+msgstr "Der absolute Pfad des Verzeichnisses, aus dem pepgen die entpackten Original-ePubs liest (epub_original_dir von pepgen), ohne „/“ am Ende. Ist es gesetzt, kann die Export-Seite die ePubs an pepgen übergeben, statt sie zum Herunterladen anzubieten. Der Webserver braucht Schreibrechte. Leer lassen, um nur den Download anzubieten."
+
+msgid "There was an error generating your epub. Please try again."
+msgstr "Beim Erstellen Ihres ePubs ist ein Fehler aufgetreten. Bitte versuchen Sie es noch einmal."
+
+msgid "Your epub could not be downloaded, please contact us and provide the following error message: %error_message"
+msgstr "Ihr ePub konnte nicht heruntergeladen werden. Bitte wenden Sie sich an uns und nennen Sie diese Fehlermeldung: %error_message"
+
+msgid "The directory has to be an absolute path."
+msgstr "Das Verzeichnis muss ein absoluter Pfad sein."
+
+msgid "The directory does not exist."
+msgstr "Das Verzeichnis existiert nicht."
+
+msgid "The directory is not writable for the web server."
+msgstr "Der Webserver darf in das Verzeichnis nicht schreiben."
+
+msgid "Export Epub"
+msgstr "ePub exportieren"
+
+msgid "Settings for blaetter export epub"
+msgstr "Einstellungen für den Export der Blätter-ePub"
+
+msgid "EPUB"
+msgstr "ePub"
+
+msgid "Generates ePubs based on Editions."
+msgstr "Erstellt ePubs auf der Grundlage von Ausgaben."
+
+msgid "EPUB - Settings"
+msgstr "ePub-Einstellungen"
+
+msgid "Administer the blaetter export epub settings."
+msgstr "Die Einstellungen für die Blätter-ePub verwalten"
+
+msgid "Export issues as ePub"
+msgstr "Ausgaben als ePub exportieren"
+
+msgid "Allows to generate the ePub of an issue on the export page."
+msgstr "Erlaubt, auf der Export-Seite die ePubs von Ausgaben zu erstellen."
+
+msgid "Administer the ePub export"
+msgstr "Den ePub-Export verwalten"
+
+msgid "Allows to change the settings of the ePub export, e.g. the pepgen salt."
+msgstr "Erlaubt, die Einstellungen des ePub-Exports zu ändern, z. B. den pepgen-Salt."
+
+msgid "Exports an issue of the Blätter as Epub"
+msgstr "Exportiert eine Ausgabe der Blätter als ePub"
+
+msgid "Handed the ePub over to pepgen: @titles"
+msgid_plural "Handed @count ePubs over to pepgen: @titles"
+msgstr[0] "ePub an pepgen übergeben: @titles"
+msgstr[1] "@count ePubs an pepgen übergeben: @titles"

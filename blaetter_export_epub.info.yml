@@ -14,3 +14,5 @@ dependencies:
   - nodeshop:nodeshop
 
 configure: blaetter_export_epub.settings
+'interface translation project': blaetter_export_epub
+'interface translation server pattern': modules/contrib/blaetter_export_epub/translations/%language.po

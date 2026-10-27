@@ -2,36 +2,128 @@
 
 namespace Drupal\blaetter_export_epub\Form;
 
-use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Environment;
+use Drupal\Core\Batch\BatchBuilder;
+use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\blaetter_export_epub\Blaetter\Epub\Chapter;
-use Drupal\blaetter_export_epub\Blaetter\Epub\Cover;
-use Drupal\blaetter_export_epub\Blaetter\Epub\Generator;
-use Drupal\node\Entity\Node;
+use Drupal\Core\Render\Element\Tableselect;
+use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\StringTranslation\PluralTranslatableMarkup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
+use Drupal\blaetter_export_epub\Blaetter\Epub\IssueExporter;
+use Drupal\blaetter_export_epub\PepgenPublisher;
+use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Implements the EpubForm form controller.
  *
- * This form shows every issue on the Blätter website and lets the user
- * choose, which one should be converted into an epub.
+ * This form lists the issues of the Blätter website (newest first, 20 per page) and lets the user choose, which ones
+ * are exported as ePub: handed over to pepgen when its original directory is set, or offered as download.
  *
  * @see \Drupal\Core\Form\FormBase
  */
-class EpubForm extends FormBase
+class EpubForm extends FormBase implements TrustedCallbackInterface
 {
     /**
-     * The placeholder for the watermark within the imprint, pepgen replaces XXXXX with the personal watermark.
-     *
-     * The watermark is inline text, the line break separates it from the following sentence about the rights of use.
+     * The number of issues per page.
      */
-    const IMPRINT_WATERMARK = '<span class="Bold char-style-override-12">XXXXX </span><br />';
+    const ISSUES_PER_PAGE = 20;
+
+    /**
+     * The number of issues that can be downloaded at once; they are built within one request.
+     */
+    const MAX_DOWNLOAD = 10;
+
+    /**
+     * The entity type manager.
+     *
+     * @var EntityTypeManagerInterface
+     */
+    protected $entityTypeManager;
+
+    /**
+     * The date formatter.
+     *
+     * @var DateFormatterInterface
+     */
+    protected $dateFormatter;
+
+    /**
+     * The extension path resolver, for the templates of the module.
+     *
+     * @var ExtensionPathResolver
+     */
+    protected $pathResolver;
+
+    public function __construct(
+        EntityTypeManagerInterface $entity_type_manager,
+        DateFormatterInterface $date_formatter,
+        ExtensionPathResolver $path_resolver
+    ) {
+        $this->entityTypeManager = $entity_type_manager;
+        $this->dateFormatter = $date_formatter;
+        $this->pathResolver = $path_resolver;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function create(ContainerInterface $container)
+    {
+        return new static(
+            $container->get('entity_type.manager'),
+            $container->get('date.formatter'),
+            $container->get('extension.path.resolver')
+        );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function trustedCallbacks()
+    {
+        return ['preRenderBulkFormCells'];
+    }
+
+    /**
+     * Adds the class of a bulk form to the checkbox cell of each row, Claro's tableselect script looks for it.
+     *
+     * @param array $element
+     *   The tableselect element, after its default pre render callback.
+     *
+     * @return array
+     */
+    public static function preRenderBulkFormCells($element)
+    {
+        foreach ($element['#rows'] ?? [] as $index => $row) {
+            if (isset($row['data'][0]) && !is_array($row['data'][0])) {
+                $element['#rows'][$index]['data'][0] = [
+                    'data'  => $row['data'][0],
+                    'class' => ['blaetter-export-epub-bulk-form'],
+                ];
+            }
+        }
+        return $element;
+    }
+
+    /**
+     * Getter method for Form ID.
+     *
+     * @return string
+     *   The unique ID of the form defined by this class.
+     */
+    public function getFormId()
+    {
+        return 'blaetter_export_epub_epub_form';
+    }
 
     /**
      * Build the form.
-     *
-     * A build form method constructs an array that defines how markup and
-     * other form elements are included in an HTML form.
      *
      * @param array $form
      *   Default form array structure.
@@ -43,85 +135,132 @@ class EpubForm extends FormBase
      */
     public function buildForm(array $form, FormStateInterface $form_state)
     {
+        $directory = $this->getPepgenDirectory();
+        $storage = $this->entityTypeManager->getStorage('node');
 
-        $nids = \Drupal::entityQuery('node')
-            ->accessCheck(TRUE)
+        $nids = $storage->getQuery()
+            ->accessCheck(true)
             ->condition('status', 1)
             ->condition('type', 'ausgabe')
             ->sort('nid', 'DESC')
+            ->pager(self::ISSUES_PER_PAGE)
             ->execute();
-        $nodes = Node::loadMultiple($nids);
 
-        $options = array();
-        foreach ($nodes as $node) {
-            $options[$node->id()] = $node->getTitle();
+        $header = ['title' => $this->t('Issue', [], ['context' => 'Blaetter issue'])];
+        if ('' !== $directory) {
+            $header['pepgen'] = $this->t('At pepgen since');
+        }
+        $header['operations'] = $this->t('Operations');
+
+        $options = [];
+        foreach ($storage->loadMultiple($nids) as $node) {
+            $row = ['title' => ['data' => $node->toLink()->toRenderable()]];
+            if ('' !== $directory) {
+                $mimetype = $directory . '/' . $node->id() . '.epub/mimetype';
+                $row['pepgen'] = is_file($mimetype) ? $this->dateFormatter->format(filemtime($mimetype), 'short') : '–';
+            }
+            $row['operations'] = ['data' => ['#type' => 'operations', '#links' => $this->getOperations($node)]];
+            $options[$node->id()] = $row;
         }
 
-        $form['basics'] = [
-            '#title'            => $this->t('choose edition'),
-            '#type'             => 'details',
-            '#description'      => 'Hier können Ausgaben ausgewählt und als ePub ' .
-                                   'heruntegeladen werden.<br /><br />' .
-                                   'Bis September 2022 gab es zwei verschiedene Export-Aktionen: "Export ePub" ' .
-                                   'und "Export mobi".<br />' .
-                                   'Seit September 2022 wird mobi nicht mehr benötigt und wurde daher entfernt',
-            '#open'             => true,
-        ];
-
-        $form['basics']['edition'] = [
-            '#title'            => $this->t('edition'),
-            '#type'             => 'select',
-            '#required'         => true,
-            '#options'          => $options,
-        ];
-
-        $form['basics']['export'] = [
-            '#title'            => 'Export-Aktion',
-            '#type'             => 'select',
-            '#required'         => true,
-            '#default_value'    => 'epub',
-            '#options'          => [
-                'epub' => 'Export ePub (mit Wasserzeichen)',
+        $settings = Url::fromRoute('blaetter_export_epub.settings');
+        $form['help'] = [
+            '#type'             => 'container',
+            'bundle'            => [
+                '#type'             => 'html_tag',
+                '#tag'              => 'p',
+                'text'              => [
+                    '#markup'           => $this->t(
+                        'Here the issues can be downloaded bundled as ePub or copied directly into the download directory for the users. To do so, simply select one or more issues and choose the action "@action" at the end of the table.',
+                        ['@action' => $this->t('Hand over to pepgen')]
+                    ),
+                ],
+                'settings'          => [
+                    '#prefix'           => ' ',
+                    '#markup'           => $settings->access()
+                        ? $this->t(
+                            'If the action is missing, the destination directory for the export still has to be set <a href=":settings">in the settings</a>.',
+                            [':settings' => $settings->toString()]
+                        )
+                        : $this->t('If the action is missing, the destination directory for the export still has to be set in the settings.'),
+                ],
+            ],
+            'download'          => [
+                '#type'             => 'html_tag',
+                '#tag'              => 'p',
+                '#value'            => $this->t('Alternatively, several issues can also be downloaded as ePub.'),
             ],
         ];
 
-
-        // Group submit handlers in an actions element with a key of "actions" so
-        // that it gets styled correctly, and so that other modules may add actions
-        // to the form. This is not required, but is convention.
-        $form['actions'] = [
-          '#type' => 'actions',
+        $form['issues'] = [
+            '#type'             => 'tableselect',
+            '#header'           => $header,
+            '#options'          => $options,
+            '#empty'            => $this->t('No issues found.'),
+            // the default pre render callback of tableselect, then the class of the checkbox cells
+            '#pre_render'       => [
+                [Tableselect::class, 'preRenderTableselect'],
+                [static::class, 'preRenderBulkFormCells'],
+            ],
         ];
 
-        // Add a submit button that handles the submission of the form.
-        $form['actions']['submit'] = [
-          '#type' => 'submit',
-          '#value' => $this->t('Submit'),
+        // The bulk actions below the table, built like Claro builds them for the bulk form of Views (see
+        // ClaroFormHooks::formAlter()): Claro's tableselect script counts the selected rows and keeps the actions
+        // sticky at the bottom while rows are selected.
+        $form['bulk_actions'] = [
+            '#type'             => 'container',
+            '#attributes'       => [
+                'class'                         => ['views-bulk-actions'],
+                'data-drupal-views-bulk-actions' => '',
+                'role'                          => 'group',
+                'aria-labelledby'               => 'blaetter-export-epub-bulk-label',
+            ],
         ];
+        $form['bulk_actions']['group_label'] = [
+            '#type'             => 'container',
+            '#markup'           => $this->t('Perform actions on the selected issues'),
+            '#attributes'       => ['id' => 'blaetter-export-epub-bulk-label', 'class' => ['visually-hidden']],
+        ];
+        $form['bulk_actions']['status'] = [
+            '#type'             => 'container',
+            '#markup'           => $this->t('No items selected'),
+            '#attributes'       => [
+                'class'                         => [
+                    'js-views-bulk-actions-status',
+                    'views-bulk-actions__item',
+                    'views-bulk-actions__item--status',
+                    'js-show',
+                ],
+                'data-drupal-views-bulk-actions-status' => '',
+            ],
+        ];
+        $form['bulk_actions']['action'] = [
+            '#title'            => $this->t('Action'),
+            '#type'             => 'select',
+            '#options'          => $this->getActions(),
+            '#default_value'    => '' !== $directory ? 'pepgen' : 'download',
+            '#wrapper_attributes' => [
+                'class'             => ['views-bulk-actions__item', 'views-bulk-actions__item--preceding-actions'],
+            ],
+        ];
+        $form['bulk_actions']['actions'] = [
+            '#type'             => 'actions',
+            '#attributes'       => ['class' => ['views-bulk-actions__item']],
+        ];
+        $form['bulk_actions']['actions']['submit'] = [
+            '#type'             => 'submit',
+            '#value'            => $this->t('Apply to selected items'),
+            '#button_type'      => 'primary',
+            '#attributes'       => ['class' => ['button--small']],
+        ];
+
+        $form['pager'] = ['#type' => 'pager'];
 
         return $form;
     }
 
     /**
-     * Getter method for Form ID.
-     *
-     * The form ID is used in implementations of hook_form_alter() to allow other
-     * modules to alter the render array built by this form controller. It must be
-     * unique site wide. It normally starts with the providing module's name.
-     *
-     * @return string
-     *   The unique ID of the form defined by this class.
-     */
-    public function getFormId()
-    {
-        return 'blaetter_export_epub_epub_form';
-    }
-
-    /**
      * Implements form validation.
-     *
-     * The validateForm method is the default method called to validate input on
-     * a form.
      *
      * @param array $form
      *   The render array of the currently built form.
@@ -130,32 +269,47 @@ class EpubForm extends FormBase
      */
     public function validateForm(array &$form, FormStateInterface $form_state)
     {
-        $edition = $form_state->getValue('edition')
-            ? Node::load($form_state->getValue('edition'))
-            : null;
-        if (!$edition instanceof Node) {
-            $form_state->setErrorByName(
-                'edition',
-                $this->t('The selected edition could not be found.')
-            );
-        } elseif ('ausgabe' != $edition->getType()) {
-            $form_state->setErrorByName(
-                'edition',
-                $this->t('Something is wrong with the selected node: Its no edition.')
-            );
+        $nids = $this->getSelectedIssues($form_state);
+        if (!$nids) {
+            $form_state->setErrorByName('issues', $this->t('Please select at least one issue.'));
         }
-        if ('epub' !== $form_state->getValue('export')) {
-            $form_state->setErrorByName(
-                'export',
-                $this->t('Something is wrong with the export action.')
-            );
+        $storage = $this->entityTypeManager->getStorage('node');
+        foreach ($nids as $nid) {
+            $edition = $storage->load($nid);
+            if (!$edition instanceof NodeInterface) {
+                $form_state->setErrorByName(
+                    'issues',
+                    $this->t('The selected edition could not be found.')
+                );
+            } elseif ('ausgabe' != $edition->getType()) {
+                $form_state->setErrorByName(
+                    'issues',
+                    $this->t('Something is wrong with the selected node: Its no edition.')
+                );
+            }
+        }
+
+        $action = $form_state->getValue('action');
+        if (!isset($this->getActions()[$action])) {
+            $form_state->setErrorByName('action', $this->t('The action is not valid.'));
+        } elseif ('download' === $action && count($nids) > self::MAX_DOWNLOAD) {
+            $form_state->setErrorByName('issues', $this->t(
+                'Please download at most @max issues at once, or hand them over to pepgen.',
+                ['@max' => self::MAX_DOWNLOAD]
+            ));
+        } elseif ('pepgen' === $action) {
+            $problem = PepgenPublisher::checkDirectory($this->getPepgenDirectory());
+            if (null !== $problem) {
+                $form_state->setErrorByName('action', $this->t('pepgen: @problem', ['@problem' => $problem]));
+            }
         }
     }
 
     /**
      * Implements a form submit handler.
      *
-     * The submitForm method is the default method called for any submit elements.
+     * The hand over to pepgen runs as batch, one issue per request. The download builds the ePubs at once and sends
+     * one ePub, or several as zip archive.
      *
      * @param array $form
      *   The render array of the currently built form.
@@ -164,243 +318,191 @@ class EpubForm extends FormBase
      */
     public function submitForm(array &$form, FormStateInterface $form_state)
     {
-        // Get the Edition from the form state value.
-        $edition = Node::load($form_state->getValue('edition'));
+        $nids = $this->getSelectedIssues($form_state);
 
-        // Get the export type, since September 2022 only epub is supported.
-        $export_type = $form_state->getValue('export');
-
-        // prepare an array for all the authors of this edition
-        // we need that later for the author overview page.
-        $authors = [];
-
-        // Create an instance of the PHPEpub class. Its wrapped with a custom class to
-        // outsource some logic.
-        $epub = new Generator(
-            $edition->getTitle(),
-            $edition->id(),
-            "Blätter für deutsche und internationale Politik",
-            "https://www.blaetter.de/node/" . $edition->id(),
-            "de",
-            // links and images relative to the website
-            \Drupal::request()->getSchemeAndHttpHost(),
-            \Drupal::root(),
-            // the public files may be a symlink to a directory outside the Drupal installation
-            array_filter([\Drupal::service('file_system')->realpath('public://')])
-        );
-
-        // get the module base path
-        $module_base_path = \Drupal::service('extension.path.resolver')->getPath('module', 'blaetter_export_epub');
-
-        // get some template data
-        //  - $header_raw: The Markup for the header
-        //  - $footer_raw: The Markup for the footer
-        //  - $imprint_raw: The Markup for the imprint (it changes not that often so its stored statically)
-        //  - $authors_raw: The Markup for the author overview page
-        //  - $css_raw: The css that needs to be injected into the book
-        $header_raw = file_get_contents(
-            $module_base_path . '/templates/head.tmpl'
-        );
-        $footer_raw = file_get_contents(
-            $module_base_path . '/templates/foot.tmpl'
-        );
-        $imprint_raw = file_get_contents(
-            $module_base_path . '/templates/imprint.tmpl'
-        );
-        $authors_raw = file_get_contents(
-            $module_base_path . '/templates/authors.tmpl'
-        );
-        $css_raw = file_get_contents(
-            $module_base_path . '/templates/css/styles.css'
-        );
-
-        // Create an instance of Cover to hold the cover data of the epub
-        // and add the cover to the epub
-        $cover = new Cover(
-            $edition,
-            str_replace('___TITLE___', Html::escape($edition->getTitle()), $header_raw),
-            $footer_raw
-        );
-        $cover->setExportType($export_type);
-        $epub->addCover($cover);
-
-        // Create a table of contents for the epub
-        $epub->addToc();
-
-        // Add the styles
-        $epub->addStyles($css_raw);
-
-        // Get all book pages in the correct order (e.g. weight)
-        // Books and its contents are managed via Drupal
-        $book_manager = \Drupal::service('book.manager');
-
-        $outline = $book_manager->getTableOfContents($edition->id(), 2);
-        $nodes = Node::loadMultiple(array_keys($outline));
-
-        // Loop through all aricles for the current edition, prepare the nodes and
-        // create the epub chapters.
-        foreach ($nodes as $node) {
-            // if we're on the book cover, continue
-            if ($node->id() == $edition->id()) {
-                continue;
+        if ('pepgen' === $form_state->getValue('action')) {
+            $batch = (new BatchBuilder())
+                ->setTitle($this->t('Handing the ePubs over to pepgen'))
+                ->setFinishCallback([static::class, 'handOverFinished']);
+            foreach ($nids as $nid) {
+                $batch->addOperation([static::class, 'handOverBatch'], [$nid, $this->getPepgenDirectory()]);
             }
-            // store the edition within the node
-            $node->edition = $cover->getEdition();
-            // store the year within the node
-            $node->year = $cover->getYear();
-            // store the current rubric within the node
-            $node->rubric = $epub->getRubric();
-            // create an instance of Chapter from the node.
-            $chapter = new Chapter(
-                $node,
-                str_replace(
-                    '___TITLE___',
-                    Html::escape($node->getTitle()),
-                    $header_raw
-                ),
-                $footer_raw
+            batch_set($batch->toArray());
+            return;
+        }
+
+        // the ePubs are built within this request, one after the other
+        Environment::setTimeLimit(300);
+        $exporter = new IssueExporter($this->pathResolver->getPath('module', 'blaetter_export_epub'));
+        $editions = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
+        try {
+            $response = IssueExporter::downloadResponse($exporter->buildFiles($editions));
+        } catch (\Throwable $e) {
+            $this->logger('blaetter_export_epub')->error('Download of ePubs failed: @message', ['@message' => $e->getMessage()]);
+            $this->messenger()->addError($this->t('The ePubs could not be created: @message', ['@message' => $e->getMessage()]));
+            return;
+        }
+        if ($exporter->getMissingFonts()) {
+            $titles = array_map(fn ($edition) => $edition->getTitle(), array_values($editions));
+            $this->messenger()->addWarning(self::missingFontsMessage($exporter->getMissingFonts(), $titles));
+        }
+        $form_state->setResponse($response);
+    }
+
+    /**
+     * Batch operation: exports one issue and hands it over to pepgen.
+     *
+     * @param int $nid
+     *   The node id of the issue.
+     * @param string $directory
+     *   The original directory of pepgen.
+     * @param array|\ArrayAccess $context
+     *   The batch context.
+     */
+    public static function handOverBatch($nid, $directory, &$context)
+    {
+        $edition = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+        if (!$edition instanceof NodeInterface || 'ausgabe' !== $edition->getType()) {
+            $context['results']['failed'][] = new TranslatableMarkup('@nid: no issue', ['@nid' => $nid]);
+            return;
+        }
+        $exporter = new IssueExporter(
+            \Drupal::service('extension.path.resolver')->getPath('module', 'blaetter_export_epub')
+        );
+        try {
+            (new PepgenPublisher($directory, \Drupal::lock()))->publish($exporter->build($edition)->getBookData(), $nid);
+            $context['results']['done'][] = $edition->getTitle();
+            \Drupal::logger('blaetter_export_epub')->notice(
+                'ePub of node @nid handed over to pepgen.',
+                ['@nid' => $nid]
             );
-            // Check for the rubric of the current node and compare that with the active rubric
-            if ($chapter->getRubric() !== $epub->getRubric()) {
-                //error_log($node->nid . ': Active: ' . $epub->rubric . '; Current: ' . $chapter->getRubric());
-                // Change ePub TOC level back to root
-                $epub->rootLevel();
-                // Set new Rubric as current active rubric
-                $epub->setRubric($chapter->getRubric());
-                $epub->addChapterWrapper(
-                    $epub->getRubric(),
-                    $chapter->getFilename() . '.html#' . $epub->getRubricId()
-                );
-                // Add current sublevel to TOC
-                $epub->subLevel();
+        } catch (\Throwable $e) {
+            \Drupal::logger('blaetter_export_epub')->error(
+                'Hand over of the ePub of node @nid to pepgen failed: @message',
+                ['@nid' => $nid, '@message' => $e->getMessage()]
+            );
+            $context['results']['failed'][] = new TranslatableMarkup(
+                '@title: @message',
+                ['@title' => $edition->getTitle(), '@message' => $e->getMessage()]
+            );
+        }
+        if ($exporter->getMissingFonts()) {
+            foreach ($exporter->getMissingFonts() as $font) {
+                $context['results']['missing_fonts'][$font] = $font;
             }
-            $authors = array_merge($authors, $chapter->getAuthors(true));
-            // Add the chapter
-            $epub->addChapter($chapter);
+            $context['results']['without_fonts'][] = $edition->getTitle();
         }
+        $context['message'] = $edition->getTitle();
+    }
 
-        // sort the authors by key
-        // @see Chapter::getTaxonomyData() for details
-        ksort($authors, SORT_LOCALE_STRING);
-        // create the markup for the author page
-        $authors_string = '<p class="Ebook-Fliesstext-ohneEinzug">' .
-                          '' .
-                          implode('</p><p class="Ebook-Fliesstext-ohneEinzug">&#160;</p><p class="Ebook-Fliesstext-ohneEinzug">', $authors) .
-                          '</p>' .
-                          '<p class="Ebook-Fliesstext-ohneEinzug">&#160;</p>';
+    /**
+     * Batch finished callback: reports the result of the hand over.
+     *
+     * @param bool $success
+     *   Whether the batch ran through.
+     * @param array $results
+     *   The results of the operations.
+     */
+    public static function handOverFinished($success, array $results)
+    {
+        $messenger = \Drupal::messenger();
+        if (!empty($results['done'])) {
+            $messenger->addStatus(new PluralTranslatableMarkup(
+                count($results['done']),
+                'Handed the ePub over to pepgen: @titles',
+                'Handed @count ePubs over to pepgen: @titles',
+                ['@titles' => implode(', ', $results['done'])]
+            ));
+        }
+        foreach ($results['failed'] ?? [] as $failure) {
+            $messenger->addError(new TranslatableMarkup('Handing over to pepgen failed: @failure', ['@failure' => $failure]));
+        }
+        if (!empty($results['missing_fonts'])) {
+            $messenger->addWarning(self::missingFontsMessage($results['missing_fonts'], $results['without_fonts']));
+        }
+        if (!$success) {
+            $messenger->addError(new TranslatableMarkup('The hand over was aborted.'));
+        }
+    }
 
-        // create a fake node object to use it within the Chapter class
-        // for the author page
-        $data = [];
-        $data['nid'] = ['x-default' => '999998'];
-        $data['title'] = ['x-default' => 'Autorinnen und Autoren'];
-        $data['body'] = [
-            'x-default' => [
-                0 => [
-                    'value' => str_replace('___AUTOREN___', $authors_string, $authors_raw)
-                ]
-            ]
+    /**
+     * Returns one warning about the fonts that are missing in the module, with the issues exported without them.
+     *
+     * @param string[] $fonts
+     *   File names of the missing fonts.
+     * @param string[] $issues
+     *   Titles of the issues exported without these fonts.
+     *
+     * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+     */
+    public static function missingFontsMessage(array $fonts, array $issues)
+    {
+        return new TranslatableMarkup(
+            'Fonts are missing in templates/font/ of the module, so they are not part of the ePubs of @issues: @fonts',
+            ['@issues' => implode(', ', $issues), '@fonts' => implode(', ', $fonts)]
+        );
+    }
+
+    /**
+     * Returns the actions for the selected issues: the hand over to pepgen first, if its directory is set.
+     *
+     * @return \Drupal\Core\StringTranslation\TranslatableMarkup[]
+     */
+    protected function getActions()
+    {
+        $actions = [];
+        if ('' !== $this->getPepgenDirectory()) {
+            $actions['pepgen'] = $this->t('Hand over to pepgen');
+        }
+        $actions['download'] = $this->t('Download as ePub (several as zip archive)');
+        return $actions;
+    }
+
+    /**
+     * Returns the links of the operations column for an issue.
+     *
+     * @param \Drupal\node\NodeInterface $node
+     *   The issue.
+     *
+     * @return array
+     */
+    protected function getOperations(NodeInterface $node)
+    {
+        $operations = [
+            'download' => [
+                'title'     => $this->t('Download ePub'),
+                'url'       => Url::fromRoute('blaetter_export_epub.download_issue', ['node' => $node->id()]),
+                'weight'    => 0,
+            ],
         ];
-        $data['field_subtitle'] = [];
-        $authors_node = new Node($data, 'node', 'story');
-        $authors_node->rubric = 'Extras';
-        $chapter = new Chapter(
-            $authors_node,
-            str_replace('___TITLE___', Html::escape($authors_node->getTitle()), $header_raw),
-            $footer_raw
-        );
-        $epub->addChapter($chapter);
-
-        // create a fake node object to use it within the Chapter class
-        // for the imprint
-        $data = [];
-        $data['nid'] = ['x-default' => '999999'];
-        $data['title'] = ['x-default' => 'Impressum'];
-        if ('epub' == $export_type) {
-            $data['body'] = [
-                'x-default' => [
-                    0 => [
-                        'value' => str_replace(
-                            '___WATERMARK___',
-                            self::IMPRINT_WATERMARK,
-                            $imprint_raw
-                        )
-                    ]
-                ]
+        if ($node->access('update')) {
+            $operations['edit'] = [
+                'title'     => $this->t('Edit'),
+                'url'       => $node->toUrl('edit-form'),
+                'weight'    => 10,
             ];
-        } else {
-            $data['body'] = [
-                'x-default' => [
-                    0 => [
-                        'value' => str_replace(
-                            '___WATERMARK___',
-                            '',
-                            $imprint_raw
-                        )
-                    ]
-                ]
-              ];
         }
-        $data['field_subtitle'] = [];
-        $imprint_node = new Node($data, 'node', 'story');
-        $imprint_node->rubric = 'Extras';
-        $chapter = new Chapter(
-            $imprint_node,
-            str_replace('___TITLE___', Html::escape($imprint_node->getTitle()), $header_raw),
-            $footer_raw
-        );
-        $epub->addChapter($chapter);
+        return $operations;
+    }
 
-        // add the palm logo below the articles from the module, so it is not fetched from the live site.
-        $epub->addLargeFile(
-            Chapter::PALM_IMAGE,
-            'palme',
-            $module_base_path . '/' . Chapter::PALM_IMAGE_SOURCE,
-            'image/jpeg'
-        );
+    /**
+     * Returns the node ids of the selected issues.
+     *
+     * @param \Drupal\Core\Form\FormStateInterface $form_state
+     *   Object describing the current state of the form.
+     *
+     * @return int[]
+     */
+    protected function getSelectedIssues(FormStateInterface $form_state)
+    {
+        return array_values(array_map('intval', array_filter((array) $form_state->getValue('issues'))));
+    }
 
-        // add some fonts to the archive as they're not added automatically for
-        // whatever reason.
-        $font_path = $module_base_path . '/templates/font/';
-
-        $epub->addLargeFile(
-            'font/CandidaStd-Bold.otf',
-            'CandidaStd-Bold',
-            $font_path . 'CandidaStd-Bold.otf',
-            'font/opentype'
-        );
-        $epub->addLargeFile(
-            'font/CandidaStd-Italic.otf',
-            'CandidaStd-Italic',
-            $font_path . 'CandidaStd-Italic.otf',
-            'font/opentype'
-        );
-        $epub->addLargeFile(
-            'font/CandidaStd-Roman.otf',
-            'CandidaStd-Roman',
-            $font_path . 'CandidaStd-Roman.otf',
-            'font/opentype'
-        );
-        $epub->addLargeFile(
-            'font/FrutigerLTStd-Bold.otf',
-            'FrutigerLTStd-Bold',
-            $font_path . 'FrutigerLTStd-Bold.otf',
-            'font/opentype'
-        );
-        $epub->addLargeFile(
-            'font/FrutigerLTStd-Light.otf',
-            'FrutigerLTStd-Light',
-            $font_path . 'FrutigerLTStd-Light.otf',
-            'font/opentype'
-        );
-        $epub->addLargeFile(
-            'font/FrutigerLTStd-LightCn.otf',
-            'FrutigerLTStd-LightCn',
-            $font_path . 'FrutigerLTStd-LightCn.otf',
-            'font/opentype'
-        );
-
-        // create the epub and deliver it to the admin user.
-        $epub->createEpub();
+    /**
+     * Returns the original directory of pepgen from the settings, or an empty string if it is not set.
+     */
+    protected function getPepgenDirectory()
+    {
+        return (string) $this->config('blaetter_export_epub.settings')->get('pepgen.original_dir');
     }
 }

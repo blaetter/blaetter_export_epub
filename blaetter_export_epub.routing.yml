@@ -18,3 +18,15 @@ blaetter_export_epub.settings:
     _admin_route: TRUE
 route_callbacks:
   - '\Drupal\blaetter_export_epub\Routing\EpubRoutes::routes'
+blaetter_export_epub.download_issue:
+  path: '/admin/content/epub/{node}/download'
+  defaults:
+    _controller: '\Drupal\blaetter_export_epub\Controller\ExportController::download'
+  requirements:
+    _permission: 'export epub'
+    node: \d+
+  options:
+    _admin_route: TRUE
+    parameters:
+      node:
+        type: entity:node

@@ -1,6 +1,6 @@
 services:
   blaetter_export_epub.commands:
     class: \Drupal\blaetter_export_epub\Commands\EpubCommands
-    arguments: ['@config.factory', '@entity_type.manager']
+    arguments: ['@config.factory', '@entity_type.manager', '@request_stack', '@extension.path.resolver', '@lock', '@book.outline_storage']
     tags:
       - { name: drush.command }

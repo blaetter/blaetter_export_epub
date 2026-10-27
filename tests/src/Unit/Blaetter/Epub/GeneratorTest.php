@@ -56,7 +56,7 @@ class GeneratorTest extends UnitTestCase
 
     private function createGenerator(): Generator
     {
-        return new Generator('Dezember 2018', 28694, 'Blätter', 'https://www.blaetter.de/node/28694', 'de', 'https://www.blaetter.de', $this->drupal_root);
+        return new Generator('Dezember 2018', 'Blätter', 'https://www.blaetter.de/node/28694', 'de', 'https://www.blaetter.de', $this->drupal_root);
     }
 
     /**
@@ -116,7 +116,7 @@ class GeneratorTest extends UnitTestCase
         try {
             $this->assertNull($this->createGenerator()->addLocalImage('sites/default/files/linked/linked.jpg'));
 
-            $generator = new Generator('Dezember 2018', 28694, 'Blätter', 'https://www.blaetter.de/node/28694', 'de', 'https://www.blaetter.de', $this->drupal_root, [$public]);
+            $generator = new Generator('Dezember 2018', 'Blätter', 'https://www.blaetter.de/node/28694', 'de', 'https://www.blaetter.de', $this->drupal_root, [$public]);
             $this->assertSame(
                 'images/local-' . md5(realpath($public . '/linked.jpg')) . '.jpg',
                 $generator->addLocalImage('sites/default/files/linked/linked.jpg')

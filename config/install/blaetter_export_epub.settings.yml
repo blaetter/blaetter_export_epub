@@ -2,3 +2,4 @@ pepgen:
   salt: ""
   base_url: ""
   download_url: ""
+  original_dir: ""

@@ -14,11 +14,6 @@ class Generator
     public $epub;
 
     /**
-     * Holds the name of the ePub-File (for download)
-     */
-    public $name;
-
-    /**
      * Holds the current rubric
      */
     public $rubric;
@@ -66,8 +61,6 @@ class Generator
      *
      * @param string $title
      *  The title of the epub
-     * @param string $name
-     *  The filename of the epub
      * @param string $author
      *  The author of the epub
      * @param string $identifier
@@ -84,7 +77,6 @@ class Generator
      */
     public function __construct(
         $title,
-        $name,
         $author,
         $identifier,
         $language,
@@ -96,7 +88,6 @@ class Generator
         $this->local_root = $local_root;
         $this->allowed_roots = $allowed_roots;
         $this->epub = new EPub();
-        $this->name = $name;
         $this->epub->setTitle($title);
         $this->epub->setAuthor($author, $author);
         $this->epub->setIdentifier($identifier . "&amp;stamp=" . time(), EPub::IDENTIFIER_URI);
@@ -238,10 +229,15 @@ class Generator
         return $this->epub->addLargeFile($fileName, $fileId, $filePath, $mimetype);
     }
 
-    public function createEpub()
+    /**
+     * Returns the finished ePub as zip data, for the download or the hand over to pepgen.
+     *
+     * @return string
+     *   The ePub (zip archive) in binary form.
+     */
+    public function getBookData()
     {
-        $this->epub->finalize();
-        return $this->epub->sendBook($this->name);
+        return $this->epub->getBook();
     }
 
     public function getRubric()

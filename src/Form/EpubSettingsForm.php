@@ -6,6 +6,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\NodeType;
 use Drupal\Component\Utility\Html;
+use Drupal\blaetter_export_epub\PepgenPublisher;
 
 /**
  * Class ProductSettingsForm.
@@ -43,7 +44,7 @@ class EpubSettingsForm extends ConfigFormBase
         $form['pepgen'] = [
             '#type'             => 'details',
             '#title'            => $this->t('Pepgen settings'),
-            '#description'      => $this->t('Theese are the settings for the pepgen integration.'),
+            '#description'      => $this->t('These are the settings for the pepgen integration.'),
             '#group'            => 'basic',
             '#open'             => true,
         ];
@@ -89,6 +90,16 @@ class EpubSettingsForm extends ConfigFormBase
             '#size'             => 64,
             '#default_value'    => $config->get('pepgen.download_url'),
         ];
+        $form['pepgen']['original_dir'] = [
+            '#type'             => 'textfield',
+            '#title'            => $this->t('pepgen original directory'),
+            '#description'      => $this->t(
+                'The absolute path of the directory pepgen reads the unzipped original ePubs from (epub_original_dir of pepgen), without the trailing "/". When set, the export page can hand the ePubs over to pepgen instead of offering them as download. The web server needs write access. Leave empty to only offer the download.'
+            ),
+            '#maxlength'        => 255,
+            '#size'             => 64,
+            '#default_value'    => $config->get('pepgen.original_dir'),
+        ];
         return parent::buildForm($form, $form_state);
     }
 
@@ -98,6 +109,13 @@ class EpubSettingsForm extends ConfigFormBase
     public function validateForm(array &$form, FormStateInterface $form_state)
     {
         parent::validateForm($form, $form_state);
+        $directory = rtrim(trim((string) $form_state->getValue('original_dir')), '/');
+        if ('' !== $directory) {
+            $problem = PepgenPublisher::checkDirectory($directory);
+            if (null !== $problem) {
+                $form_state->setErrorByName('original_dir', $problem);
+            }
+        }
     }
 
     /**
@@ -110,7 +128,8 @@ class EpubSettingsForm extends ConfigFormBase
         $this->config('blaetter_export_epub.settings')
             ->set('pepgen.salt', $this->getSaltToStore($form_state->getValue('salt')))
             ->set('pepgen.base_url', $form_state->getValue('base_url'))
-            ->set('pepgen.download_url', $form_state->getValue('download_url'));
+            ->set('pepgen.download_url', $form_state->getValue('download_url'))
+            ->set('pepgen.original_dir', rtrim(trim((string) $form_state->getValue('original_dir')), '/'));
 
         $this->config('blaetter_export_epub.settings')->save();
     }

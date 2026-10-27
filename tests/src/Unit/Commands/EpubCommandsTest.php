@@ -4,13 +4,19 @@ namespace Drupal\Tests\blaetter_export_epub\Unit\Commands;
 
 use Drupal\blaetter_export_epub\Commands\EpubCommands;
 use Drupal\blaetter_export_epub\EpubCredentials;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ExtensionPathResolver;
+use Drupal\Core\Lock\LockBackendInterface;
+use Drupal\book\BookOutlineStorageInterface;
 use Drupal\Tests\blaetter_export_epub\Unit\EpubTestTrait;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Tests the drush command to check watermark and token of an ePub.
@@ -33,6 +39,26 @@ class EpubCommandsTest extends UnitTestCase
     private $output;
 
     /**
+     * The request stack of the command, by default with the address drush uses without --uri.
+     *
+     * @var RequestStack
+     */
+    private $requestStack;
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $container = new ContainerBuilder();
+        $container->set('string_translation', $this->getStringTranslationStub());
+        \Drupal::setContainer($container);
+        $this->requestStack = new RequestStack();
+        $this->requestStack->push(Request::create('http://default/'));
+    }
+
+    /**
      * Creates the command with the given loadable nodes and users.
      */
     private function createCommand(array $nodes, array $users): EpubCommands
@@ -50,7 +76,11 @@ class EpubCommandsTest extends UnitTestCase
             $this->getConfigFactoryStub([
                 'blaetter_export_epub.settings' => ['pepgen' => ['salt' => self::SALT]],
             ]),
-            $entity_type_manager
+            $entity_type_manager,
+            $this->requestStack,
+            $this->createMock(ExtensionPathResolver::class),
+            $this->createMock(LockBackendInterface::class),
+            $this->createMock(BookOutlineStorageInterface::class)
         );
         $this->output = new BufferedOutput();
         $command->setOutput($this->output);
@@ -114,6 +144,33 @@ class EpubCommandsTest extends UnitTestCase
                     $e->getMessage()
                 );
             }
+        }
+    }
+
+    /**
+     * Tests, that the export needs the address of the website and a directory.
+     */
+    public function testExportNeedsUriAndDirectory(): void
+    {
+        try {
+            $this->createCommand([], [])->export('29381');
+            $this->fail('The export ran without --uri.');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('--uri', $e->getMessage());
+        }
+
+        $this->requestStack->push(Request::create('https://www.blaetter.de/'));
+        try {
+            $this->createCommand([], [])->export('29381');
+            $this->fail('The export ran without a directory.');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('--destination', $e->getMessage());
+        }
+        try {
+            $this->createCommand([], [])->export('29381', ['from' => null, 'destination' => 'relative/dir']);
+            $this->fail('The export ran with a relative directory.');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('absolute path', $e->getMessage());
         }
     }
 }

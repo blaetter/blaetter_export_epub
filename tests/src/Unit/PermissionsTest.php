@@ -43,6 +43,7 @@ class PermissionsTest extends UnitTestCase
             [
                 'blaetter_export_epub.generate' => 'export epub',
                 'blaetter_export_epub.settings' => 'administer blaetter export epub',
+                'blaetter_export_epub.download_issue' => 'export epub',
             ],
             $required
         );
