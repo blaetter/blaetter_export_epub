@@ -79,6 +79,37 @@ class GeneratorTest extends UnitTestCase
     }
 
     /**
+     * Tests, that the type of an image is taken from its content: a JPEG saved as .png is added as .jpg.
+     */
+    public function testImageTypeComesFromTheContent(): void
+    {
+        $downloads = $this->drupal_root . '/sites/default/files/downloads';
+        copy($downloads . '/caracas.jpg', $downloads . '/wrong-extension.png');
+        file_put_contents($downloads . '/no-image.jpg', 'text');
+        $generator = $this->createGenerator();
+
+        $path = $generator->addLocalImage('sites/default/files/downloads/wrong-extension.png');
+        $this->assertSame('images/local-' . md5(realpath($downloads . '/wrong-extension.png')) . '.jpg', $path);
+        $this->assertNull($generator->addLocalImage('sites/default/files/downloads/no-image.jpg'));
+
+        // without a chapter PHPePub writes no manifest
+        $generator->epub->addChapter(
+            'Kapitel',
+            'kapitel.html',
+            '<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>Kapitel</title>'
+            . '</head><body><p>Text</p></body></html>'
+        );
+        $file = tempnam(sys_get_temp_dir(), 'blaetter-epub-test-');
+        file_put_contents($file, $generator->getBookData());
+        $zip = new \ZipArchive();
+        $zip->open($file);
+        $opf = $zip->getFromIndex((int) $zip->locateName('book.opf', \ZipArchive::FL_NODIR));
+        $zip->close();
+        unlink($file);
+        $this->assertMatchesRegularExpression('#href="' . preg_quote($path, '#') . '"\s+media-type="image/jpeg"#', (string) $opf);
+    }
+
+    /**
      * Tests, that the chapters use the images of the website within the epub.
      */
     public function testChapterUsesLocalImages(): void

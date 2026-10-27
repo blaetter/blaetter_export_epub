@@ -47,13 +47,15 @@ class Generator
     private $local_images = [];
 
     /**
-     * Image types that may be added to an EPUB 2.
+     * Image types that may be added to an EPUB 2: type of getimagesize() => [extension, media type].
+     *
+     * The type is taken from the content of the file, not from its extension: a JPEG saved as .png on the website
+     * would otherwise be declared as image/png and make the ePub invalid.
      */
     const IMAGE_TYPES = [
-        'jpg' => 'image/jpeg',
-        'jpeg' => 'image/jpeg',
-        'png' => 'image/png',
-        'gif' => 'image/gif',
+        IMAGETYPE_JPEG => ['jpg', 'image/jpeg'],
+        IMAGETYPE_PNG => ['png', 'image/png'],
+        IMAGETYPE_GIF => ['gif', 'image/gif'],
     ];
 
     /**
@@ -173,16 +175,17 @@ class Generator
         if (false === $file || !is_file($file) || !$this->isAllowedFile($file)) {
             return null;
         }
-        $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-        if (!isset(self::IMAGE_TYPES[$extension])) {
+        $info = @getimagesize($file);
+        if (false === $info || !isset(self::IMAGE_TYPES[$info[2]])) {
             return null;
         }
+        [$extension, $media_type] = self::IMAGE_TYPES[$info[2]];
 
         $id = 'local-' . md5($file);
         $internal_path = 'images/' . $id . '.' . $extension;
         // the same file may be referenced several times, e.g. with or without a leading slash
         if (!in_array($internal_path, $this->local_images, true)
-            && false === $this->epub->addLargeFile($internal_path, $id, $file, self::IMAGE_TYPES[$extension])
+            && false === $this->epub->addLargeFile($internal_path, $id, $file, $media_type)
         ) {
             return null;
         }

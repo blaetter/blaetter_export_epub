@@ -25,6 +25,7 @@ Sections per version: Features, Security, Bugs, Removed, Maintenance (omit empty
 - The pepgen salt is no longer shown in the settings form and, when set in `settings.php`, no longer ends up in the config export
 
 ### Bugs
+- An image saved with the wrong extension on the website (e.g. a JPEG as .png) was declared with the wrong media type and made the ePub invalid; the type is now taken from the content of the file (`getimagesize()`), files that are no images are left out
 - Messages for subscribers when the download of an ePub failed were shown in English, they had no translation
 - Fonts that are not installed in `templates/font/` were still listed in the manifest and the styles, so every ePub since 2020 had 6 epubcheck errors; missing fonts are now left out together with their `@font-face` rules, and the export warns about them
 - The cover and the lead images of the articles were missing when the website could not be reached from the server itself (e.g. on the stage server behind a password): they are read from the file system instead of being fetched via their URL; images in a public files directory outside the Drupal installation (symlink) are embedded as well
