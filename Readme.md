@@ -8,7 +8,7 @@ You are, however, free to fork or use this module for your own purposes.
 
 ## Hints
 
-- The export can include some webfonts into the ePub (`IssueExporter::FONTS`). As of copyright these fonts are not part of this repository, they have to be put into `templates/font/` after installing the module. Fonts that are missing are left out of the ePub together with their `@font-face` rules (the export warns about them), so the ePub stays valid.
+- The ePub embeds the fonts of the website (`IssueExporter::FONTS`, files in `templates/font/`, sources and licenses in its `README.md`): titles in Playfair Display, headings in Droid Sans, text and quotes in Droid Serif. A display options file in `META-INF/` tells Apple Books to use them. The imprint gets a notice on their licenses before its copyright line (`templates/font-licenses.tmpl`); an imprint taken from an existing ePub gets the current notice instead of the one it brings along. A font missing in `templates/font/` is left out together with its `@font-face` rule (the export warns about it, and the notice is left out), so the ePub stays valid.
 - The palm logo below the articles and the fonts are added from the module, so the export works without access to the live site.
 - The identifier of the ePub is pinned to the domain of the Blätter (https://www.blaetter.de/node/…).
 

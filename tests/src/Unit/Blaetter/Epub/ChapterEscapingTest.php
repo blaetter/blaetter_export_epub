@@ -31,6 +31,7 @@ class ChapterEscapingTest extends UnitTestCase
             'subtitle' => '',
             'rubric' => '',
             'author' => '',
+            'author_names' => [],
             'image' => '',
             'content' => '',
             // The rubric of the previous chapter.
@@ -51,14 +52,23 @@ class ChapterEscapingTest extends UnitTestCase
             'title' => 'Foodora & Co.: <Die> Revolte',
             'subtitle' => 'Über "Plattformen" & Arbeit',
             'rubric' => 'Kommentare & Berichte',
-            'author' => 'Orion Reith & Co.',
+            'author_names' => ['Orion Reith & Co.', 'Anna <Muster>', 'Bernd Beispiel'],
             'content' => '<p>Der <strong>Text</strong> &amp; mehr</p>',
         ])->getContent();
 
-        $this->assertStringContainsString('>Kommentare &amp; Berichte<br />', $content);
-        $this->assertStringContainsString('<p class="Ebook-Titel">Foodora &amp; Co.: &lt;Die&gt; Revolte', $content);
-        $this->assertStringContainsString('<span class="Light">Über &quot;Plattformen&quot; &amp; Arbeit</span>', $content);
-        $this->assertStringContainsString('<span class="Light">von </span>Orion Reith &amp; Co.</p>', $content);
+        $this->assertStringContainsString('>Kommentare &amp; Berichte</p>', $content);
+        $this->assertStringContainsString('<p class="Ebook-Titel Ebook-Titel-Untertitel">Foodora &amp; Co.: &lt;Die&gt; Revolte</p>', $content);
+        $this->assertStringContainsString(
+            '<p class="Ebook-Untertitel Ebook-Untertitel-Autor">Über &quot;Plattformen&quot; &amp; Arbeit</p>',
+            $content
+        );
+        $this->assertStringContainsString(
+            '<p class="Ebook-Autor"><span class="Ebook-Autor-Von">Von </span>'
+                . '<span class="Ebook-Autor-Name">Orion Reith &amp; Co.</span>, '
+                . '<span class="Ebook-Autor-Name">Anna &lt;Muster&gt;</span><span class="Ebook-Autor-Von"> und </span>'
+                . '<span class="Ebook-Autor-Name">Bernd Beispiel</span></p>',
+            $content
+        );
         // The body is HTML and must not be escaped.
         $this->assertStringContainsString('<p class="Ebook-Fliesstext">Der <strong>Text</strong> &amp; mehr</p>', $content);
         // The result is well-formed XML.
@@ -82,13 +92,17 @@ class ChapterEscapingTest extends UnitTestCase
     }
 
     /**
-     * Tests, that the title of the cover is escaped.
+     * Tests, that the cover page repeats the cover without a heading, followed by the placeholder for the watermark.
      */
-    public function testCoverTitleIsEscaped(): void
+    public function testCoverHasNoHeading(): void
     {
-        $content = $this->createChapter(Cover::class, ['title' => 'Mai & Juni <2026>'])->getContent();
+        $cover = $this->createChapter(Cover::class, ['title' => 'Mai & Juni <2026>', 'image' => 'images/cover.png']);
+        $cover->setExportType('epub');
+        $content = $cover->getContent();
 
-        $this->assertStringContainsString('Titelbild Mai &amp; Juni &lt;2026&gt;</p>', $content);
+        $this->assertStringNotContainsString('Titelbild Mai', $content);
+        $this->assertStringContainsString('<img class="frame-1" src="images/cover.png"', $content);
+        $this->assertStringContainsString('XXXXX', $content);
     }
 
     public static function imageCreditProvider(): array

@@ -7,7 +7,12 @@ Sections per version: Features, Security, Bugs, Removed, Maintenance (omit empty
 ## Unreleased
 
 ### Features
-- The footnotes of an article (Word and LibreOffice markup, which arrives nested in each other) are collected into one block after the text, separated by a line and some space; empty paragraphs right before it are removed. Superscripts within superscripts (`<sup><sup>[1]</sup></sup>`) are collapsed into one
+- The ePub embeds the fonts of the website instead of Candida and Frutiger, which were never part of the module: titles in Playfair Display, headings in Droid Sans, text and quotes in Droid Serif (licenses Apache 2.0 and SIL OFL 1.1, sources in `templates/font/README.md`); the imprint names them with a link to their licenses, and Apple Books is told to use them (`com.apple.ibooks.display-options.xml`)
+- The page after the cover shows the cover without the heading „Titelbild …“; the table of contents still leads to it
+- The lead image follows the title closely, without an empty line below it, and keeps its proportions on narrow screens instead of a fixed size
+- The text is set in justified alignment with hyphenation and a line height of 1.5 instead of 1.25, like in the printed issue; quotes stay left aligned
+- The head of an article follows the printed issue: the rubric at the start of a section in bold sans serif above a thin line, the subtitle in a paragraph of its own below the title, smaller and bold, the authors in a line of their own between two thin lines („Von“ in italics, the names in spaced capitals); the first paragraph of an article without a lead image now gets its initial and no indent, which a line break after the title prevented
+- The footnotes of an article (Word and LibreOffice markup, which arrives nested in each other) are collected into one block after the text, separated by a line and some space; empty paragraphs and the line of Word right before it are removed. Superscripts within superscripts (`<sup><sup>[1]</sup></sup>`) are collapsed into one
 - An issue that has an ePub at pepgen already keeps the imprint of that ePub when it is exported again (the imprint changes over the years), new issues get the current imprint from the template; the placeholder for the watermark gets the current form, an imprint without placeholder gets one. Imprints of exports until 2020, which are no well-formed XML, are read as HTML
 - The authors page of an existing ePub is kept the same way (the short bios change over the years), as long as it lists the same authors as the current one
 - Embedded podcast players of detektor.fm are left out of the ePub instead of becoming a link to the player

@@ -25,17 +25,27 @@ class IssueExporter
     /**
      * The fonts of the ePub: file name in templates/font/ => id in the manifest.
      *
-     * The fonts are not part of the repository (copyright), they have to be installed by hand. Missing fonts are left
+     * The fonts of the website, see templates/font/README.md for their sources and licenses. Missing fonts are left
      * out of the ePub, together with their @font-face rules, so the ePub stays valid.
      */
     const FONTS = [
-        'CandidaStd-Bold.otf' => 'CandidaStd-Bold',
-        'CandidaStd-Italic.otf' => 'CandidaStd-Italic',
-        'CandidaStd-Roman.otf' => 'CandidaStd-Roman',
-        'FrutigerLTStd-Bold.otf' => 'FrutigerLTStd-Bold',
-        'FrutigerLTStd-Light.otf' => 'FrutigerLTStd-Light',
-        'FrutigerLTStd-LightCn.otf' => 'FrutigerLTStd-LightCn',
+        'DroidSerif-Regular.ttf' => 'DroidSerif-Regular',
+        'DroidSerif-Bold.ttf' => 'DroidSerif-Bold',
+        'DroidSerif-Italic.ttf' => 'DroidSerif-Italic',
+        'DroidSerif-BoldItalic.ttf' => 'DroidSerif-BoldItalic',
+        'DroidSans-Regular.ttf' => 'DroidSans-Regular',
+        'DroidSans-Bold.ttf' => 'DroidSans-Bold',
+        'PlayfairDisplay-Regular.ttf' => 'PlayfairDisplay-Regular',
+        'PlayfairDisplay-Bold.ttf' => 'PlayfairDisplay-Bold',
+        'PlayfairDisplay-Italic.ttf' => 'PlayfairDisplay-Italic',
     ];
+
+    /**
+     * Tells Apple Books to use the fonts of the styles instead of its own ones.
+     */
+    const APPLE_DISPLAY_OPTIONS = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+        . '<display_options><platform name="*"><option name="specified-fonts">true</option></platform></display_options>'
+        . "\n";
 
     /**
      * The path of the module, relative to the Drupal root or absolute.
@@ -136,6 +146,9 @@ class IssueExporter
         );
         $css_raw = file_get_contents(
             $this->module_path . '/templates/css/styles.css'
+        );
+        $font_licenses_raw = file_get_contents(
+            $this->module_path . '/templates/font-licenses.tmpl'
         );
 
         // Create an instance of Cover to hold the cover data of the epub
@@ -254,10 +267,10 @@ class IssueExporter
         $data['body'] = [
             'x-default' => [
                 0 => [
-                    'value' => $imprint ?? str_replace(
-                        '___WATERMARK___',
-                        self::IMPRINT_WATERMARK,
-                        $imprint_raw
+                    'value' => self::withFontLicenses(
+                        $imprint ?? str_replace('___WATERMARK___', self::IMPRINT_WATERMARK, $imprint_raw),
+                        // the notice on the licenses only if the fonts are part of the ePub
+                        $this->missing_fonts ? '' : trim($font_licenses_raw)
                     )
                 ]
             ]
@@ -284,8 +297,11 @@ class IssueExporter
         // whatever reason. A missing file would still end up in the manifest.
         foreach (self::FONTS as $file => $id) {
             if (!in_array($file, $this->missing_fonts, true)) {
-                $epub->addLargeFile('font/' . $file, $id, $font_path . $file, 'font/opentype');
+                $epub->addLargeFile('font/' . $file, $id, $font_path . $file, 'application/x-font-ttf');
             }
+        }
+        if (count($this->missing_fonts) < count(self::FONTS)) {
+            $epub->addFileToMetaInf('com.apple.ibooks.display-options.xml', self::APPLE_DISPLAY_OPTIONS);
         }
 
         return $epub;
@@ -511,6 +527,32 @@ class IssueExporter
     }
 
     /**
+     * Puts the notice on the licenses of the fonts into an imprint, before its copyright line.
+     *
+     * A notice of an earlier export, which an imprint taken from an existing ePub brings along, is replaced, so the
+     * notice is there once and in its current form; an empty notice only removes it.
+     *
+     * @param string $imprint
+     *   The content of the imprint.
+     * @param string $notice
+     *   The paragraph with the notice (templates/font-licenses.tmpl), or an empty string.
+     *
+     * @return string
+     */
+    public static function withFontLicenses(string $imprint, string $notice)
+    {
+        $imprint = preg_replace('#<p class="Ebook-Impressum Ebook-Schriften">.*?</p>#s', '', $imprint);
+        if ('' === $notice) {
+            return $imprint;
+        }
+        if (preg_match('#<p[^>]*>\s*(?:<span[^>]*>\s*)?©#u', $imprint, $match, PREG_OFFSET_CAPTURE)) {
+            $position = $match[0][1];
+            return substr($imprint, 0, $position) . $notice . substr($imprint, $position);
+        }
+        return $imprint . $notice;
+    }
+
+    /**
      * Returns the content of a chapter of an ePub, or null if it has not the known frame.
      *
      * The content is what the template of the chapter holds: the frame and the title, which the chapter adds again,
@@ -552,7 +594,7 @@ class IssueExporter
      * Returns the fonts of the last export that were not found and are therefore not part of the ePub.
      *
      * @return string[]
-     *   File names, e.g. CandidaStd-Bold.otf.
+     *   File names, e.g. DroidSerif-Bold.ttf.
      */
     public function getMissingFonts()
     {
@@ -567,7 +609,7 @@ class IssueExporter
      * @param string $css
      *   The styles of the ePub.
      * @param string[] $font_files
-     *   File names of the fonts, e.g. CandidaStd-Bold.otf.
+     *   File names of the fonts, e.g. DroidSerif-Bold.ttf.
      *
      * @return string
      *   The styles without these @font-face rules.

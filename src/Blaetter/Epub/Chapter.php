@@ -47,6 +47,13 @@ class Chapter
 
     public $rubric;
 
+    /**
+     * The names of the authors, sorted like the author string.
+     *
+     * @var string[]
+     */
+    public $author_names = [];
+
     public $subtitle;
 
     public $title;
@@ -71,7 +78,8 @@ class Chapter
         $this->header       = $header;
         $this->content      = $this->data->get('body')->value;
         $this->rubric       = $this->buildRubric();
-        $this->author       = $this->buildAuthorString();
+        $this->author_names = array_values($this->getAuthors());
+        $this->author       = implode(', ', $this->author_names);
         $this->filename     = $this->data->id();
         $this->footer       = $this->buildFooter($footer);
     }
@@ -275,23 +283,35 @@ class Chapter
     {
         // Title, subtitle, rubric and authors are plain text, so they are escaped. The body is HTML.
         $output = $this->header;
+        // the head of an article like in the printed issue: rubric (only at the start of a section), title, subtitle
+        // and the authors, each in a paragraph of its own
         if (empty($this->rubric) || $this->rubric !== $this->data->rubric) {
             $output .= '<p class="Ebook-Rubriken" id="id-' . md5($this->rubric) . '">' .
-              Html::escape($this->rubric) . '<br /><br /></p>';
+              Html::escape($this->rubric) . '</p>';
         }
-        $output .= '<p class="Ebook-Titel">' . Html::escape($this->title);
+        $authors = $this->author_names;
+        $title_class = !empty($this->subtitle) ? ' Ebook-Titel-Untertitel' : ($authors ? ' Ebook-Titel-Autor' : '');
+        $output .= '<p class="Ebook-Titel' . $title_class . '">' . Html::escape($this->title) . '</p>';
         if (!empty($this->subtitle)) {
-            $output .= '<br /><span class="Light">' . Html::escape($this->subtitle) . '</span>';
+            $output .= '<p class="Ebook-Untertitel' . ($authors ? ' Ebook-Untertitel-Autor' : '') . '">'
+                . Html::escape($this->subtitle) . '</p>';
         }
-        // Close the paragraph of the title only once, the line break follows it, if there are authors.
-        if (!empty($this->author)) {
-            $output .= '<br /><span class="Light">von </span>' . Html::escape($this->author) . '</p><br />';
-        } else {
-            $output .= '<br /></p>';
+        // the authors in a line of their own below the title, like in the printed issue: "Von A, B und C"
+        if ($authors) {
+            $names = array_map(
+                fn ($name) => '<span class="Ebook-Autor-Name">' . Html::escape($name) . '</span>',
+                $authors
+            );
+            $last = array_pop($names);
+            // the spaces are part of the spans, as the formatting of the XHTML drops a space between two elements
+            $output .= '<p class="Ebook-Autor' . (empty($this->image) ? '' : ' Ebook-Autor-Bild') . '">'
+                . '<span class="Ebook-Autor-Von">Von </span>'
+                . ($names ? implode(', ', $names) . '<span class="Ebook-Autor-Von"> und </span>' : '')
+                . $last . '</p>';
         }
         if (!empty($this->image)) {
             $output .= '<div class="Foto-Ebook frame-3">' .
-              '<img class="frame-2" src="' . $this->image . '" alt="" /><br /></div>';
+              '<img class="frame-2" src="' . $this->image . '" alt="" /></div>';
         }
         // remove the inserts of blocks, contents and media that the theme renders into the body on the website
         // (e.g. [content:13]), with their paragraph if they stand alone; then wired footnote markup,

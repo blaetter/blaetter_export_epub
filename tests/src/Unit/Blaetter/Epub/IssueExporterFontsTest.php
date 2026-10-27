@@ -42,7 +42,7 @@ class IssueExporterFontsTest extends UnitTestCase
         $css = IssueExporter::removeFontFaces($this->css(), array_keys(IssueExporter::FONTS));
         $this->assertStringNotContainsStringIgnoringCase('@font-face', $css);
         $this->assertStringNotContainsString('./font/', $css);
-        $this->assertStringContainsString('font-family:"Frutiger LT Std 45 Light", sans-serif;', $css);
+        $this->assertStringContainsString('font-family:"Droid Sans", sans-serif;', $css);
     }
 
     /**
@@ -50,10 +50,48 @@ class IssueExporterFontsTest extends UnitTestCase
      */
     public function testOneFontMissing(): void
     {
-        $css = IssueExporter::removeFontFaces($this->css(), ['CandidaStd-Roman.otf']);
-        $this->assertStringNotContainsString('CandidaStd-Roman.otf', $css);
-        $this->assertStringContainsString('CandidaStd-Bold.otf', $css);
-        $this->assertStringContainsString('FrutigerLTStd-LightCn.otf', $css);
+        $css = IssueExporter::removeFontFaces($this->css(), ['DroidSerif-Regular.ttf']);
+        $this->assertStringNotContainsString('DroidSerif-Regular.ttf', $css);
+        $this->assertStringContainsString('DroidSerif-Bold.ttf', $css);
+        $this->assertStringContainsString('PlayfairDisplay-Regular.ttf', $css);
+    }
+
+    /**
+     * Every font of the list is part of the module, together with the licenses named in the notice of the imprint.
+     */
+    public function testAllFontsAreInstalled(): void
+    {
+        $directory = dirname(__DIR__, 5) . '/templates/font/';
+        foreach (array_keys(IssueExporter::FONTS) as $file) {
+            $this->assertFileExists($directory . $file);
+        }
+        $this->assertFileExists($directory . 'OFL.txt');
+        $this->assertFileExists($directory . 'LICENSE-Apache-2.0.txt');
+    }
+
+    /**
+     * The notice on the licenses of the fonts comes before the copyright line, once.
+     */
+    public function testFontLicensesBeforeTheCopyright(): void
+    {
+        $notice = '<p class="Ebook-Impressum Ebook-Schriften">Schriften: …</p>';
+        $imprint = '<p class="Ebook-Impressum">Verlag</p>' . "\n"
+            . '<p class="Ebook-Impressum">' . "\n" . '  <span class="Bold">© Blätter</span></p>';
+
+        $with_notice = IssueExporter::withFontLicenses($imprint, $notice);
+        $this->assertSame(
+            '<p class="Ebook-Impressum">Verlag</p>' . "\n" . $notice
+                . '<p class="Ebook-Impressum">' . "\n" . '  <span class="Bold">© Blätter</span></p>',
+            $with_notice
+        );
+        // an imprint taken from an ePub with the notice gets it once, in its current form
+        $again = IssueExporter::withFontLicenses(str_replace('…', 'alt', $with_notice), $notice);
+        $this->assertSame(1, substr_count($again, 'Ebook-Schriften'));
+        $this->assertStringNotContainsString('alt', $again);
+        // without the fonts the notice is removed
+        $this->assertSame($imprint, IssueExporter::withFontLicenses($with_notice, ''));
+        // without a copyright line the notice comes last
+        $this->assertSame('<p>Verlag</p>' . $notice, IssueExporter::withFontLicenses('<p>Verlag</p>', $notice));
     }
 
     /**

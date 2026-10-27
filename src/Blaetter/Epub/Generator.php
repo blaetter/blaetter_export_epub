@@ -233,6 +233,14 @@ class Generator
     }
 
     /**
+     * Adds a file to META-INF/, e.g. the display options of Apple Books.
+     */
+    public function addFileToMetaInf($fileName, $fileData)
+    {
+        return $this->epub->addFileToMETAINF($fileName, $fileData);
+    }
+
+    /**
      * Returns the finished ePub as zip data, for the download or the hand over to pepgen.
      *
      * @return string

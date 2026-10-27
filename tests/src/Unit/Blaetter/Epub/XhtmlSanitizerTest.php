@@ -43,6 +43,13 @@ class XhtmlSanitizerTest extends UnitTestCase
                 '<p><iframe src="https://www.youtube.com/embed/abc" frameborder="no" allowfullscreen></iframe></p>',
                 '<p><a href="https://www.youtube.com/embed/abc">https://www.youtube.com/embed/abc</a></p>',
             ],
+            'line of Word above the footnotes is removed' => [
+                '<p>Text.<a href="#_ftn1" id="_ftnref1">[1]</a></p><p></p><hr /><p>&nbsp;</p>'
+                    . '<div id="ftn1"><p><a href="#_ftnref1" id="_ftn1">[1]</a> Quelle.</p></div>',
+                '<p>Text.<a href="#_ftn1" id="_ftnref1">[1]</a></p><div class="Ebook-Fussnoten"><div id="ftn1">'
+                    . '<p><a href="#_ftnref1" id="_ftn1">[1]</a> Quelle.</p></div></div>',
+            ],
+            'line within the text stays' => ['<p>Eins</p><hr/><p>Zwei</p>', '<p>Eins</p><hr/><p>Zwei</p>'],
             'podcast player is removed with its paragraph' => [
                 '<p>Text.</p><p><iframe src="https://detektor.fm/politik/blaetter-podcast/embed?%20color=e71835&amp;t=1388&amp;nobrand" frameborder="no"></iframe></p><h2>Titel</h2>',
                 '<p>Text.</p><h2>Titel</h2>',

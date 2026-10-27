@@ -343,7 +343,10 @@ class XhtmlSanitizer
             $block->appendChild($footnote);
         }
 
-        while (($previous = $block->previousSibling) && $this->isEmptyBlock($previous)) {
+        // the block draws the separating line itself, so the line Word puts above the footnotes goes as well
+        while (($previous = $block->previousSibling)
+            && ($this->isEmptyBlock($previous) || 'hr' === strtolower($previous->nodeName))
+        ) {
             $previous->parentNode->removeChild($previous);
         }
     }
