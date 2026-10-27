@@ -293,20 +293,19 @@ class Chapter
             $output .= '<div class="Foto-Ebook frame-3">' .
               '<img class="frame-2" src="' . $this->image . '" alt="" /><br /></div>';
         }
-        // remove wired footnote markup first
+        // remove the inserts of blocks, contents and media that the theme renders into the body on the website
+        // (e.g. [content:13]), with their paragraph if they stand alone; then wired footnote markup,
         // e.g. <a href="#_ftn5" name="_ftnref5" title=""><span><span><span><span>
         $content = preg_replace(
             [
                 '/<hr.*\/>/i',
-                '/\[block:[^\]+]/i',
-                '/\[media:[^\]+]/i',
-                '/\[content:[^\]+]/i'
+                '#<p[^>]*>(?:\s|&nbsp;)*\[(?:block|media|content):[^\]]+\](?:\s|&nbsp;)*</p>#i',
+                '/\[(?:block|media|content):[^\]]+\]/i',
             ],
             [
                 '<hr />',
                 '',
                 '',
-                ''
             ],
             $this->content
         );

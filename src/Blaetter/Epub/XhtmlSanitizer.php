@@ -13,12 +13,24 @@ use Drupal\Component\Utility\Html;
 class XhtmlSanitizer
 {
     /**
-     * Elements that are removed with their content. iframes with a URL are replaced by a link.
+     * Elements that are removed with their content. iframes with a URL are replaced by a link, except players.
      */
     const REMOVED_ELEMENTS = [
         'script', 'style', 'iframe', 'object', 'embed', 'video', 'audio', 'source', 'track', 'form', 'input',
         'button', 'select', 'textarea', 'noscript', 'svg', 'canvas', 'map', 'area', 'param',
     ];
+
+    /**
+     * Hosts of embedded players that are left out completely, as a link to the player is of no use in an ePub.
+     */
+    const DROPPED_EMBED_HOSTS = ['detektor.fm'];
+
+    /**
+     * The parents of the players left out by the current run, removed as well if nothing else is left in them.
+     *
+     * @var \DOMNode[]
+     */
+    private $emptied_parents = [];
 
     /**
      * The elements of XHTML 1.1. Other elements, e.g. font or figure, are replaced by their content.
@@ -96,7 +108,13 @@ class XhtmlSanitizer
         $document = Html::load($html);
         $body = $document->getElementsByTagName('body')->item(0);
 
+        $this->emptied_parents = [];
         $this->cleanNode($body);
+        foreach ($this->emptied_parents as $parent) {
+            if ($parent->parentNode && $this->isEmptyBlock($parent)) {
+                $parent->parentNode->removeChild($parent);
+            }
+        }
         $this->collectFootnotes($document);
         $this->collapseNestedSup($document);
         $this->cleanIds($document);
@@ -179,13 +197,18 @@ class XhtmlSanitizer
     }
 
     /**
-     * Removes an element, an iframe with a URL is replaced by a link to it, e.g. a video.
+     * Removes an element, an iframe with a URL is replaced by a link to it, e.g. a video, unless it is a player.
      */
     private function removeElement(\DOMElement $element)
     {
         if ('iframe' === strtolower($element->nodeName)
             && null !== ($url = $this->normalizeUrl($element->getAttribute('src')))
         ) {
+            if ($this->isDroppedEmbed($url)) {
+                $this->emptied_parents[] = $element->parentNode;
+                $element->parentNode->removeChild($element);
+                return;
+            }
             $link = $element->ownerDocument->createElement('a');
             $link->setAttribute('href', $url);
             $link->appendChild($element->ownerDocument->createTextNode($url));
@@ -193,6 +216,20 @@ class XhtmlSanitizer
             return;
         }
         $element->parentNode->removeChild($element);
+    }
+
+    /**
+     * Whether the URL of an iframe belongs to a player that is left out, e.g. a podcast of detektor.fm.
+     */
+    private function isDroppedEmbed($url)
+    {
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        foreach (self::DROPPED_EMBED_HOSTS as $dropped) {
+            if ($host === $dropped || str_ends_with($host, '.' . $dropped)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

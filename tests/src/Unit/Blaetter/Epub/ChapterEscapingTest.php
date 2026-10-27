@@ -66,6 +66,22 @@ class ChapterEscapingTest extends UnitTestCase
     }
 
     /**
+     * Tests, that the inserts of blocks, contents and media are removed completely, with their paragraph if they
+     * stand alone.
+     */
+    public function testInsertsAreRemoved(): void
+    {
+        $content = $this->createChapter(Chapter::class, [
+            'content' => '<p>Erster Absatz.</p><p>[content:13]</p><p>&nbsp;[block:weihnachtsabo]&nbsp;</p>'
+                . '<h2>Zwischentitel</h2><p>Text [media:9] und [content:5] weiter.</p>',
+        ])->getContent();
+
+        $this->assertStringNotContainsString(']', $content);
+        $this->assertStringContainsString('<p class="Ebook-Fliesstext">Erster Absatz.</p><h2>Zwischentitel</h2>', $content);
+        $this->assertStringContainsString('<p class="Ebook-Fliesstext">Text  und  weiter.</p>', $content);
+    }
+
+    /**
      * Tests, that the title of the cover is escaped.
      */
     public function testCoverTitleIsEscaped(): void

@@ -45,7 +45,7 @@ class IssueExporter
     private $module_path;
 
     /**
-     * The original directory of pepgen, to take the imprint of an ePub that exists already; empty if not set.
+     * The original directory of pepgen, to take imprint and authors of an ePub that exists already; empty if not set.
      *
      * @var string
      */
@@ -57,6 +57,13 @@ class IssueExporter
      * @var bool
      */
     private $previous_imprint = false;
+
+    /**
+     * Whether the last export took the authors page of the existing ePub of the issue.
+     *
+     * @var bool
+     */
+    private $previous_authors = false;
 
     /**
      * The fonts of the last export that were not found in templates/font/.
@@ -203,13 +210,17 @@ class IssueExporter
         // sort the authors by key
         // @see Chapter::getTaxonomyData() for details
         ksort($authors, SORT_LOCALE_STRING);
-        // create the markup for the author page
+        // create the markup for the author page. An issue that has an ePub at pepgen already keeps its authors page,
+        // as the short bios of the authors change over the years, unless the authors differ, e.g. after an article
+        // was added.
         $authors_string = '<p class="Ebook-Fliesstext-ohneEinzug">' .
                           '' .
                           implode('</p><p class="Ebook-Fliesstext-ohneEinzug">&#160;</p><p class="Ebook-Fliesstext-ohneEinzug">', $authors) .
                           '</p>' .
                           '<p class="Ebook-Fliesstext-ohneEinzug">&#160;</p>';
 
+        $previous_authors = $this->getPreviousAuthors($edition, $authors_string);
+        $this->previous_authors = null !== $previous_authors;
         // create a fake node object to use it within the Chapter class
         // for the author page
         $data = [];
@@ -218,7 +229,7 @@ class IssueExporter
         $data['body'] = [
             'x-default' => [
                 0 => [
-                    'value' => str_replace('___AUTOREN___', $authors_string, $authors_raw)
+                    'value' => $previous_authors ?? str_replace('___AUTOREN___', $authors_string, $authors_raw)
                 ]
             ]
         ];
@@ -389,27 +400,87 @@ class IssueExporter
     }
 
     /**
-     * Returns the content of the imprint of the ePub of the issue at pepgen, or null if there is none.
+     * Whether the last export took the authors page of the existing ePub of the issue instead of the current one.
      */
-    protected function getPreviousImprint(NodeInterface $edition)
+    public function usedPreviousAuthors()
+    {
+        return $this->previous_authors;
+    }
+
+    /**
+     * Returns a chapter of the ePub of the issue at pepgen, e.g. 999999.html, or null if there is none.
+     */
+    protected function getPreviousChapter(NodeInterface $edition, string $file_name)
     {
         if ('' === $this->pepgen_directory) {
             return null;
         }
-        $file = $this->pepgen_directory . '/' . $edition->id() . '.epub/OEBPS/999999.html';
+        $file = $this->pepgen_directory . '/' . $edition->id() . '.epub/OEBPS/' . $file_name;
         $xhtml = is_file($file) ? file_get_contents($file) : false;
-        if (false === $xhtml || '' === trim($xhtml)) {
+        return false === $xhtml || '' === trim($xhtml) ? null : $xhtml;
+    }
+
+    /**
+     * Returns the content of the imprint of the ePub of the issue at pepgen, or null if there is none.
+     */
+    protected function getPreviousImprint(NodeInterface $edition)
+    {
+        $xhtml = $this->getPreviousChapter($edition, '999999.html');
+        return null === $xhtml ? null : self::extractImprint($xhtml, self::IMPRINT_WATERMARK);
+    }
+
+    /**
+     * Returns the content of the authors page of the ePub of the issue at pepgen, or null if there is none or if it
+     * lists other authors than the current one.
+     */
+    protected function getPreviousAuthors(NodeInterface $edition, string $current)
+    {
+        $xhtml = $this->getPreviousChapter($edition, '999998.html');
+        return null === $xhtml ? null : self::extractAuthors($xhtml, $current);
+    }
+
+    /**
+     * Returns the content of an authors page (999998.html), or null if it has not the known frame or if its authors
+     * are not the ones of the current authors page, e.g. after an article was added to the issue.
+     *
+     * @param string $xhtml
+     *   The authors page of an ePub.
+     * @param string $current
+     *   The markup of the current authors, to compare the names with.
+     *
+     * @return string|null
+     */
+    public static function extractAuthors(string $xhtml, string $current)
+    {
+        $content = self::extractChapterContent($xhtml);
+        if (null === $content || self::authorNames($content) !== self::authorNames($current)) {
             return null;
         }
-        return self::extractImprint($xhtml, self::IMPRINT_WATERMARK);
+        return $content;
+    }
+
+    /**
+     * Returns the names of the authors of an authors page, sorted.
+     *
+     * @return string[]
+     */
+    private static function authorNames(string $markup)
+    {
+        preg_match_all('#<span class="char-style-override-15">(.*?)</span>#s', $markup, $matches);
+        $names = array_map(
+            fn ($name) => preg_replace('/\s+/u', ' ', trim(html_entity_decode(strip_tags($name), ENT_QUOTES | ENT_HTML5, 'UTF-8'))),
+            $matches[1]
+        );
+        $names = array_values(array_unique($names));
+        sort($names);
+        return $names;
     }
 
     /**
      * Returns the content of an imprint chapter (999999.html), or null if it has not the known frame.
      *
-     * The content is what the template of the imprint holds: the frame and the title, which the chapter adds again,
-     * are left out. The placeholder for the watermark gets the current form (with the line break after it); an
-     * imprint without placeholder gets it before the sentence about the rights of use, so the ePub is personalised.
+     * The placeholder for the watermark gets the current form (with the line break after it); an imprint without
+     * placeholder gets it before the sentence about the rights of use, so the ePub is personalised.
      *
      * @param string $xhtml
      *   The imprint chapter of an ePub.
@@ -420,13 +491,42 @@ class IssueExporter
      */
     public static function extractImprint(string $xhtml, string $watermark)
     {
+        $content = self::extractChapterContent($xhtml);
+        if (null === $content) {
+            return null;
+        }
+
+        if (str_contains($content, 'XXXXX')) {
+            // the placeholder of older exports had no line break after it
+            return preg_replace('#<span[^>]*>\s*XXXXX\s*</span>(?!\s*<br)#', $watermark, $content, 1);
+        }
+        $position = strpos($content, 'Mit dem Erwerb des E-Books');
+        if (false !== $position) {
+            $span = strrpos(substr($content, 0, $position), '<span');
+            if (false !== $span) {
+                return substr($content, 0, $span) . $watermark . substr($content, $span);
+            }
+        }
+        return $content . '<p class="Ebook-Impressum">' . $watermark . '</p>';
+    }
+
+    /**
+     * Returns the content of a chapter of an ePub, or null if it has not the known frame.
+     *
+     * The content is what the template of the chapter holds: the frame and the title, which the chapter adds again,
+     * are left out.
+     *
+     * @return string|null
+     */
+    public static function extractChapterContent(string $xhtml)
+    {
         $document = new \DOMDocument();
         if (@$document->loadXML($xhtml, LIBXML_NONET)) {
             $xpath = new \DOMXPath($document);
             $xpath->registerNamespace('h', 'http://www.w3.org/1999/xhtml');
             $frame = $xpath->query('//h:div[@class="Einfacher-Textrahmen"]')->item(0);
         } elseif (preg_match('#<body[^>]*>(.*)</body>#s', $xhtml, $body)) {
-            // exports until 2020 wrote imprints that are no well-formed XML; the chapter cleans the content again
+            // exports until 2020 wrote chapters that are no well-formed XML; the chapter cleans the content again
             $document = Html::load($body[1]);
             $frame = (new \DOMXPath($document))->query('//div[@class="Einfacher-Textrahmen"]')->item(0);
         }
@@ -445,22 +545,7 @@ class IssueExporter
             $content .= $document->saveXML($child);
         }
         $content = trim(str_replace(' xmlns="http://www.w3.org/1999/xhtml"', '', $content));
-        if ('' === $content) {
-            return null;
-        }
-
-        if (str_contains($content, 'XXXXX')) {
-            // the placeholder of older exports had no line break after it
-            return preg_replace('#<span[^>]*>\s*XXXXX\s*</span>(?!\s*<br)#', $watermark, $content, 1);
-        }
-        $position = strpos($content, 'Mit dem Erwerb des E-Books');
-        if (false !== $position) {
-            $span = strrpos(substr($content, 0, $position), '<span');
-            if (false !== $span) {
-                return substr($content, 0, $span) . $watermark . substr($content, $span);
-            }
-        }
-        return $content . '<p class="Ebook-Impressum">' . $watermark . '</p>';
+        return '' === $content ? null : $content;
     }
 
     /**

@@ -9,6 +9,8 @@ Sections per version: Features, Security, Bugs, Removed, Maintenance (omit empty
 ### Features
 - The footnotes of an article (Word and LibreOffice markup, which arrives nested in each other) are collected into one block after the text, separated by a line and some space; empty paragraphs right before it are removed. Superscripts within superscripts (`<sup><sup>[1]</sup></sup>`) are collapsed into one
 - An issue that has an ePub at pepgen already keeps the imprint of that ePub when it is exported again (the imprint changes over the years), new issues get the current imprint from the template; the placeholder for the watermark gets the current form, an imprint without placeholder gets one. Imprints of exports until 2020, which are no well-formed XML, are read as HTML
+- The authors page of an existing ePub is kept the same way (the short bios change over the years), as long as it lists the same authors as the current one
+- Embedded podcast players of detektor.fm are left out of the ePub instead of becoming a link to the player
 - The export page lists the issues as table (newest first, 20 per page, unpublished ones too with their status, so the ePub can be prepared before the issue is published) with an explanation above and multiple selection; the actions sit below the table in Claro's bulk actions bar, like in the order overview of NodeShop (dark, with the number of selected items, sticky while items are selected); each row links to the issue and offers the download of its ePub and editing
 - German translation in `translations/de.po`, registered as interface translation of the module, so `drush locale:update` imports it; all texts of the user interface are English source strings passed through `t()`
 - The selected issues can be handed over to pepgen (the default when its original directory is set, new setting) or downloaded (up to 10 at once, several as zip archive, built one after the other into temporary files): the hand over runs as batch, unzips each ePub into the original directory of pepgen, keeps the previous version as hidden backup and only replaces it when the new one is complete; the table shows since when pepgen has each ePub
@@ -27,6 +29,7 @@ Sections per version: Features, Security, Bugs, Removed, Maintenance (omit empty
 - The pepgen salt is no longer shown in the settings form and, when set in `settings.php`, no longer ends up in the config export
 
 ### Bugs
+- The inserts of blocks, contents and media that the website renders into the body (e.g. `[content:13]`) were removed only up to their first character, so remnants like „3]“ stood in the text; they are removed completely now, with their paragraph if they stand alone
 - An image saved with the wrong extension on the website (e.g. a JPEG as .png) was declared with the wrong media type and made the ePub invalid; the type is now taken from the content of the file (`getimagesize()`), files that are no images are left out
 - Messages for subscribers when the download of an ePub failed were shown in English, they had no translation
 - Fonts that are not installed in `templates/font/` were still listed in the manifest and the styles, so every ePub since 2020 had 6 epubcheck errors; missing fonts are now left out together with their `@font-face` rules, and the export warns about them

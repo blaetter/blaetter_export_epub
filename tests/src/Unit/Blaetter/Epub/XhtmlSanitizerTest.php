@@ -43,6 +43,14 @@ class XhtmlSanitizerTest extends UnitTestCase
                 '<p><iframe src="https://www.youtube.com/embed/abc" frameborder="no" allowfullscreen></iframe></p>',
                 '<p><a href="https://www.youtube.com/embed/abc">https://www.youtube.com/embed/abc</a></p>',
             ],
+            'podcast player is removed with its paragraph' => [
+                '<p>Text.</p><p><iframe src="https://detektor.fm/politik/blaetter-podcast/embed?%20color=e71835&amp;t=1388&amp;nobrand" frameborder="no"></iframe></p><h2>Titel</h2>',
+                '<p>Text.</p><h2>Titel</h2>',
+            ],
+            'podcast player within text keeps the text' => [
+                '<p>Hören: <iframe src="https://detektor.fm/embed"></iframe></p>',
+                '<p>Hören: </p>',
+            ],
             'scripts are removed' => ['<p>Text<script>alert(1)</script></p>', '<p>Text</p>'],
             'comments are removed' => ['<p>Text<!-- Word --></p>', '<p>Text</p>'],
             'font is replaced by its text' => [

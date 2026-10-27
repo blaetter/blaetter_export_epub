@@ -217,7 +217,8 @@ class EpubCommands extends DrushCommands
                 $path = $publisher->publish($exporter->build($node)->getBookData(), $id);
                 $this->logger()->success(
                     $id . ': ' . $node->getTitle() . ' -> ' . $path
-                    . ($exporter->usedPreviousImprint() ? ' (imprint of the existing ePub)' : ' (current imprint)')
+                    . ' (imprint: ' . ($exporter->usedPreviousImprint() ? 'existing ePub' : 'current')
+                    . ', authors: ' . ($exporter->usedPreviousAuthors() ? 'existing ePub' : 'current') . ')'
                 );
                 if ($exporter->getMissingFonts()) {
                     $without_fonts[] = $id;

@@ -8,7 +8,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * Tests, that the imprint of an existing ePub is taken over with the current placeholder for the watermark.
+ * Tests, that the imprint of an existing ePub is taken over with the current placeholder for the watermark, and its
+ * authors page if it lists the same authors.
  *
  * @group blaetter_export_epub
  */
@@ -91,5 +92,39 @@ class IssueExporterImprintTest extends UnitTestCase
             '<html xmlns="http://www.w3.org/1999/xhtml"><body><p>Impressum</p></body></html>',
             IssueExporter::IMPRINT_WATERMARK
         ));
+    }
+
+    /**
+     * Returns the markup of an authors page with the given authors and bios.
+     */
+    private function authors(array $bios): string
+    {
+        $paragraphs = [];
+        foreach ($bios as $name => $bio) {
+            $paragraphs[] = '<p class="Ebook-Fliesstext-ohneEinzug"><span class="char-style-override-15">' . $name
+                . '</span>, ' . $bio . '</p>';
+        }
+        return implode('<p class="Ebook-Fliesstext-ohneEinzug">&#160;</p>', $paragraphs);
+    }
+
+    public function testAuthorsPageWithTheSameAuthorsIsUsed(): void
+    {
+        $old = $this->authors(['Ulrike Baureithel' => 'geb. 1957, freie Journalistin.', 'Rudolf &amp; Co' => 'Verlag.']);
+        // the current bios differ, the names are the same in another order and with another escaping
+        $current = $this->authors(['Rudolf &amp; Co' => 'Verlag seit 1956.', 'Ulrike  Baureithel' => 'Journalistin.']);
+
+        $content = IssueExporter::extractAuthors($this->chapter($old), $current);
+
+        $this->assertStringContainsString('geb. 1957, freie Journalistin.', $content);
+        $this->assertStringNotContainsString('Ebook-Titel', $content);
+    }
+
+    public function testAuthorsPageWithOtherAuthorsIsNotUsed(): void
+    {
+        $old = $this->authors(['Ulrike Baureithel' => 'geb. 1957.']);
+        $current = $this->authors(['Ulrike Baureithel' => 'geb. 1957.', 'Albrecht von Lucke' => 'geb. 1967.']);
+
+        $this->assertNull(IssueExporter::extractAuthors($this->chapter($old), $current));
+        $this->assertNull(IssueExporter::extractAuthors('no xml', $current));
     }
 }
