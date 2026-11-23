@@ -186,6 +186,9 @@ class XhtmlSanitizer
                 continue;
             }
 
+            if ('a' === $name) {
+                $this->nameToId($child);
+            }
             $this->cleanAttributes($child, $name);
 
             if ('a' === $name) {
@@ -256,6 +259,21 @@ class XhtmlSanitizer
             ) {
                 $element->removeAttributeNode($attribute);
             }
+        }
+    }
+
+    /**
+     * The target of an anchor in its name attribute becomes its id.
+     *
+     * LibreOffice and Word mark footnotes and their references with name="sdfootnote1sym" or name="_ftnref1".
+     * name is not allowed in XHTML, and readers only jump to ids: without the id the links lead nowhere and
+     * cleanFragmentLinks() removes them. An existing id is kept.
+     */
+    private function nameToId(\DOMElement $link)
+    {
+        $target = trim($link->getAttribute('name'));
+        if ('' !== $target && !$link->hasAttribute('id')) {
+            $link->setAttribute('id', $target);
         }
     }
 

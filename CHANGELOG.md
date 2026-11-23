@@ -34,6 +34,7 @@ Sections per version: Features, Security, Bugs, Removed, Maintenance (omit empty
 - The pepgen salt is no longer shown in the settings form and, when set in `settings.php`, no longer ends up in the config export
 
 ### Bugs
+- Footnotes had no links in the ePub: Word and LibreOffice mark the targets of the footnote links with `name` (e.g. `name="sdfootnote1sym"`), which the conversion to XHTML removed, and the links without target went with it. The name of a link now becomes its id (an existing id is kept), so the reference jumps to the footnote and back; ePub readers like PocketBook only jump to ids, which is why the links of earlier exports led to the start of the article
 - The inserts of blocks, contents and media that the website renders into the body (e.g. `[content:13]`) were removed only up to their first character, so remnants like „3]“ stood in the text; they are removed completely now, with their paragraph if they stand alone
 - An image saved with the wrong extension on the website (e.g. a JPEG as .png) was declared with the wrong media type and made the ePub invalid; the type is now taken from the content of the file (`getimagesize()`), files that are no images are left out
 - Messages for subscribers when the download of an ePub failed were shown in English, they had no translation

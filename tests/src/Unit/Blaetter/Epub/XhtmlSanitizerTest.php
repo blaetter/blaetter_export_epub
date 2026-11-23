@@ -230,6 +230,44 @@ class XhtmlSanitizerTest extends UnitTestCase
     }
 
     /**
+     * LibreOffice marks the targets with name, as on the website: they become ids, so both links keep working.
+     */
+    public function testLibreOfficeFootnoteNamesBecomeIds(): void
+    {
+        $html = '<p>Text<a class="sdfootnoteanc" href="#sdfootnote1sym" name="sdfootnote1anc"><sup>1</sup></a></p>'
+            . '<div id="sdfootnote1"><p><a class="sdfootnotesym" href="#sdfootnote1anc" name="sdfootnote1sym">1</a>'
+            . ' Quelle eins.</p></div>';
+
+        $xhtml = $this->sanitize($html);
+        $this->assertStringContainsString(
+            '<a class="sdfootnoteanc" href="#sdfootnote1sym" id="sdfootnote1anc"><sup>1</sup></a>',
+            $xhtml
+        );
+        $this->assertStringContainsString(
+            '<a class="sdfootnotesym" href="#sdfootnote1anc" id="sdfootnote1sym">1</a> Quelle eins.',
+            $xhtml
+        );
+        $this->assertStringNotContainsString('name=', $xhtml);
+    }
+
+    /**
+     * Word marks the targets with name as well; an existing id is kept.
+     */
+    public function testWordFootnoteNamesBecomeIds(): void
+    {
+        $html = '<p>Text<a href="#_ftn1" name="_ftnref1"><sup>[1]</sup></a>'
+            . '<a href="#_ftn2" id="ref2" name="_ftnref2"><sup>[2]</sup></a></p>'
+            . '<div id="ftn1"><p><a href="#_ftnref1" name="_ftn1">[1]</a> Vgl.</p></div>'
+            . '<div id="ftn2"><p><a href="#ref2" name="_ftn2">[2]</a> Ebd.</p></div>';
+
+        $xhtml = $this->sanitize($html);
+        $this->assertStringContainsString('<a href="#_ftn1" id="_ftnref1"><sup>[1]</sup></a>', $xhtml);
+        $this->assertStringContainsString('<a href="#_ftn2" id="ref2"><sup>[2]</sup></a>', $xhtml);
+        $this->assertStringContainsString('<a href="#_ftnref1" id="_ftn1">[1]</a> Vgl.', $xhtml);
+        $this->assertStringContainsString('<a href="#ref2" id="_ftn2">[2]</a> Ebd.', $xhtml);
+    }
+
+    /**
      * Without footnotes nothing changes, empty paragraphs elsewhere stay (they may be spacing on purpose).
      */
     public function testWithoutFootnotes(): void

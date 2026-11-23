@@ -40,7 +40,7 @@ The imprint comes from `templates/imprint.tmpl` for new issues. An issue that ha
 
 The authors page is taken over the same way, as the short bios of the authors change over the years, but only if it lists the same authors as the current one (e.g. not after an article was added or an author renamed); otherwise the current authors page is built. Drush reports for every issue whether imprint and authors come from the existing ePub or are current.
 
-Footnotes of Word (`div#ftn1`, anchors `#_ftn1`) and LibreOffice (`div#sdfootnote1`) are collected into one block `div.Ebook-Fussnoten` after the text, styled in `templates/css/styles.css`.
+Footnotes of Word (`div#ftn1`, anchors `#_ftn1`) and LibreOffice (`div#sdfootnote1`) are collected into one block `div.Ebook-Fussnoten` after the text, styled in `templates/css/styles.css`. The targets of their links, which both mark with `name` (not allowed in XHTML), become ids.
 
 Embedded videos become links. Embedded players that are of no use in an ePub (podcasts of detektor.fm, `XhtmlSanitizer::DROPPED_EMBED_HOSTS`) are left out with their paragraph, as are the inserts of blocks, contents and media (`[content:13]`) that the website renders into the body.
 
