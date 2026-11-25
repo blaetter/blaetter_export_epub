@@ -267,9 +267,15 @@ class Generator
         return $this;
     }
 
+    /**
+     * Starts a level of the table of contents below the current chapter (the rubric).
+     *
+     * The level has no entry of its own: the rubric is already a chapter. PHPePub needs a string as title (it passes
+     * it to preg_replace(), null is deprecated since PHP 8.1); without a CSS class it adds no entry for it.
+     */
     public function subLevel()
     {
-        return $this->epub->subLevel();
+        return $this->epub->subLevel('');
     }
 
     public function rootLevel()

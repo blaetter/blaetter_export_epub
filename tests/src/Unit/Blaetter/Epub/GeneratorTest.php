@@ -60,6 +60,27 @@ class GeneratorTest extends UnitTestCase
     }
 
     /**
+     * A level below a rubric has no entry of its own and causes no deprecation (PHPePub needs a string as title).
+     */
+    public function testSubLevelWithoutDeprecation(): void
+    {
+        $generator = $this->createGenerator();
+        $deprecations = [];
+        set_error_handler(function (int $errno, string $message) use (&$deprecations) {
+            $deprecations[] = $message;
+            return true;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+        try {
+            $level = $generator->subLevel();
+            $generator->rootLevel();
+        } finally {
+            restore_error_handler();
+        }
+        $this->assertFalse($level);
+        $this->assertSame([], $deprecations);
+    }
+
+    /**
      * Tests, that images of the website are added once and other files are refused.
      */
     public function testAddLocalImage(): void

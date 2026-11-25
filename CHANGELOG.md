@@ -54,6 +54,7 @@ Sections per version: Features, Security, Bugs, Removed, Maintenance (omit empty
 - Mobi download via Kindle mail including its settings (not offered since September 2022); update 10001 removes the old settings
 
 ### Maintenance
+- Starting the level of the table of contents below a rubric no longer passes `null` as title to PHPePub, which logged "preg_replace(): Passing null to parameter #3" (deprecated since PHP 8.1) for every rubric of every export, about two thirds of the deprecations of an export. The ePub stays the same (checked file by file apart from the time stamps): without a CSS class PHPePub adds no entry for the level either way. Test in `GeneratorTest`. The other deprecations come from PHPePub and phpzip themselves (no release since 2022), see the backlog.
 - The download is a regular response of Drupal instead of `sendBook()` of PHPePub writing directly to the output; `Generator::createEpub()` was removed
 - The export of an issue moved from the form into `IssueExporter`, used by the form and the drush command; the drush command gets the request stack and the path resolver injected
 - Dependencies in `info.yml` and version constraints in `composer.json` added or tightened
